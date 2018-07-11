@@ -37,7 +37,7 @@ class. Our work is a direct adaptation of Zhou et al. (2016)'s formulation for t
 classification using convolutional neural networks and attention mappings, Machine Learning for Healthcare, Aug 17–18, 
 2018, Stanford, California, USA. 
 
-## Affiliations
+## Research Affiliations
 1. The Hospital for Sick Children <br>
 Department of Critical Care Medicine  <br>
 Toronto, Ontario, Canada
