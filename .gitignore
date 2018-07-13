@@ -1,9 +1,3 @@
-# Data Folders
-data/labels/*
-data/training/*
-data/waveforms/mat/*
-data/waveforms/pickle/*
-
 # Jupyter Notebook
 .ipynb_checkpoints
 */.ipynb_checkpoints/*

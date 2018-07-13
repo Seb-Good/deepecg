@@ -1,9 +1,9 @@
 # Deep ECG
 In this study, a deep convolutional neural network was trained to classify single lead ECG waveforms as either 
 Normal Sinus Rhythm, Atrial Fibrillation, or Other Rhythm. The study was run in two phases, the first to generate a 
-classifier that performed at a level comparable to the top submission of the 2017 Physionet Challenge, and the second 
-to extract class activation mappings to help better understand which areas of the waveform the model was focusing on 
-when making a classification. 
+classifier that performed at a level comparable to the top submission of the 
+[2017 Physionet Challenge](https://www.physionet.org/challenge/2017/), and the second to extract class activation 
+mappings to help better understand which areas of the waveform the model was focusing on when making a classification. 
 
 The convolutional neural network has 13 layers, including dilated convolutions, max pooling, ReLU activation, batch
 normalization, and dropout. Class activation maps were generated using a global average pooling layer before the 
@@ -11,15 +11,18 @@ softmax layer. The model generated the following average scores, across all rhyt
 precision=0.84, recall=0.85, F1=0.84, and accuracy=0.88. 
 
 ## Dataset
-In the 2017 Physionet Challenge, competitors were asked to build a model to classify a single lead ECG waveform as 
-either Normal Sinus Rhythm, Atrial Fibrillation, Other Rhythm, or Noisy. The dataset consisted of 12,186 ECG waveforms 
-that were donated by AliveCor. Data were acquired by patients using one of three generations of AliveCor's 
-single-channel ECG device. Waveforms were recorded for an average of 30 seconds with the shortest waveform being 9 
-seconds, and the longest waveform being 61 seconds. The figure below presents examples of each rhythm class and the 
-AliveCor acquisition device.
+In the [2017 Physionet Challenge](https://www.physionet.org/challenge/2017/), competitors were asked to build a model to 
+classify a single lead ECG waveform as either Normal Sinus Rhythm, Atrial Fibrillation, Other Rhythm, or Noisy. The 
+dataset consisted of 12,186 ECG waveforms that were donated by AliveCor. Data were acquired by patients using one of 
+three generations of [AliveCor](https://www.alivecor.com/)'s single-channel ECG device. Waveforms were recorded for an 
+average of 30 seconds with the shortest waveform being 9 seconds, and the longest waveform being 61 seconds. The figure 
+below presents examples of each rhythm class and the [AliveCor](https://www.alivecor.com/) acquisition device.
+
+Download Training Dataset: [training2017.zip](https://www.physionet.org/challenge/2017/training2017.zip) 
 
 ![Waveform Image](figures/waveform_examples.png) 
-*Left: AliveCor hand held ECG acquisition device. Right: Examples of ECG recording for each rhythm class.*
+*Left: AliveCor hand held ECG acquisition device. Right: Examples of ECG recording for each rhythm class, 
+Goodfellow et al. (2018).*
 
 ## Class Activation Maps
 Zhou et al. (2016) demonstrate that convolutional neural networks trained for image classification appear to behave as 
@@ -51,4 +54,8 @@ Toronto, Ontario, Canada
 
 ## References
 1. B. Zhou, A. Khosla, A. Lapedriza, A. Oliva, and A. Torralba. Learning Deep Features for Discriminative Localization. 
-CVPR, 2016.
+CVPR, 2016. [DOI](https://arxiv.org/pdf/1512.04150.pdf)
+
+2.	Goodfellow, S. D., A. Goodwin, R. Greer, P. C. Laussen, M. Mazwi, and D. Eytan (2018), Atrial fibrillation 
+classification using step-by-step machine learning, Biomed. Phys. Eng. Express, 4, 045005. 
+[DOI: 10.1088/2057-1976/aabef4](http://iopscience.iop.org/article/10.1088/2057-1976/aabef4) 
