@@ -18,7 +18,8 @@ three generations of [AliveCor](https://www.alivecor.com/)'s single-channel ECG 
 average of 30 seconds with the shortest waveform being 9 seconds, and the longest waveform being 61 seconds. The figure 
 below presents examples of each rhythm class and the [AliveCor](https://www.alivecor.com/) acquisition device.
 
-Download Training Dataset: [training2017.zip](https://www.physionet.org/challenge/2017/training2017.zip) 
+Download the training dataset [training2017.zip](https://www.physionet.org/challenge/2017/training2017.zip) and place
+all **.mat** files in **deep_ecg/data/waveforms/mat** and the **labels.csv** file in **deep_ecg/data/labels**.
 
 ![Waveform Image](figures/waveform_examples.png) 
 *Left: AliveCor hand held ECG acquisition device. Right: Examples of ECG recording for each rhythm class, 
