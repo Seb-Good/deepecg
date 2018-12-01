@@ -118,7 +118,7 @@ def plot_class_activation_map_template(model, index, time_series, labels, fs):
     ax2.xaxis.set_tick_params(labelsize=16)
     ax2.yaxis.set_tick_params(labelsize=16)
 
-    # Get ECG object
+    # Get ecg object
     ecg_object = ecg.ecg(time_series_filt, sampling_rate=fs, show=False)
 
     # Get waveform templates

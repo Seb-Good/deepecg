@@ -21,3 +21,6 @@ WORKING_DIR = (
         )
     )
 )
+
+# Set data directory
+DATA_DIR = os.path.join(WORKING_DIR, 'data')
