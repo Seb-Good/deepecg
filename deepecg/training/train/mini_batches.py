@@ -2,7 +2,7 @@
 mini_batches.py
 ---------------
 This module provides classes and functions for generating mini-batches.
-By: Sebastian D. Goodfellow, Ph.D., 2017
+By: Sebastian D. Goodfellow, Ph.D., 2018
 """
 
 # Compatibility imports
