@@ -162,17 +162,19 @@ class Graph(object):
             with tf.device(self._assign_vars_to_cpu(device='/gpu:{}'.format(tower_id))):
                 with tf.name_scope('tower_{}'.format(tower_id)) as name_scope:
 
+                    print('/gpu:{}'.format(tower_id))
+
                     # Get mini-batch
-                    _x, _y = self._get_mini_batch(tower_id=tower_id)
+                    x, y = self._get_mini_batch(tower_id=tower_id)
 
                     # Compute inference
-                    logits = self.network.inference(input_layer=_y, is_training=self.is_training)
+                    logits, net = self.network.inference(input_layer=x, is_training=self.is_training)
 
                     # Compute loss
-                    loss = self._compute_loss(logits=logits, labels=_y)
+                    loss = self._compute_loss(logits=logits, labels=y)
 
                     # Compute accuracy
-                    accuracy = self._compute_accuracy(logits=logits, labels=_y)
+                    accuracy = self._compute_accuracy(logits=logits, labels=y)
 
                     # Compute gradients
                     gradients = self._compute_gradients(optimizer=self.optimizer, loss=loss, var_list=None)
@@ -187,13 +189,17 @@ class Graph(object):
                     self.tower_gradients.append(gradients)
 
                     # Append images, labels, and logits
-                    self.tower_x.append(_x)
-                    self.tower_y.append(_y)
+                    self.tower_x.append(x)
+                    self.tower_y.append(y)
                     self.tower_logits.append(logits)
 
                     # Trigger batch_norm moving mean and variance update operation
                     if tower_id == 0:
                         self.update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS, name_scope)
+
+                    # Get output from final convolutional layer
+                    if tower_id == 0:
+                        self.net = net
 
         # Merge towers
         self.loss = self._compute_mean_loss(tower_losses=self.tower_losses)
@@ -228,6 +234,8 @@ class Graph(object):
         """Assign all variables to CPU."""
         # Variable groups to assign to CPU
         ps_ops = ['Variable', 'VariableV2', 'AutoReloadVariable']
+
+        print('CPU Assign')
 
         # Variable assign function
         def _assign(op):

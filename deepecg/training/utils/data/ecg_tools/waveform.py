@@ -155,7 +155,6 @@ class Waveform(object):
         return len(waveform) * 1 / self.fs
 
     def get_dictionary(self):
-
         return {
             'label_str': self.label_str,
             'label_int': self.label_int,

@@ -21,7 +21,7 @@ below presents examples of each rhythm class and the [AliveCor](https://www.aliv
 Download the training dataset [training2017.zip](https://www.physionet.org/challenge/2017/training2017.zip) and place
 all **.mat** files in **deep_ecg/data/waveforms/mat** and the **labels.csv** file in **deep_ecg/data/labels**.
 
-![Waveform Image](figures/waveform_examples.png) 
+![Waveform Image](README/figures/waveform_examples.png) 
 *Left: AliveCor hand held ECG acquisition device. Right: Examples of ECG recording for each rhythm class, 
 Goodfellow et al. (2018).*
 
@@ -33,7 +33,7 @@ series. For our application, the class activation map for a particular rhythm cl
 discriminative temporal regions, not spatial regions, used by the convolutional neural network to identify that rhythm
 class. Our work is a direct adaptation of Zhou et al. (2016)'s formulation for time series data.
 
-![Waveform Image](figures/class_activation_map_formulation.png) 
+![Waveform Image](README/figures/class_activation_map_formulation.png) 
 *Class activation map formulation, Goodfellow et al. (2018).*
 
 ## Publications
