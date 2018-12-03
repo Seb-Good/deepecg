@@ -1,7 +1,7 @@
 """
 ecg.py
 ------
-This module provides classes and functions for preprocessing an ECG waveform.
+This module provides classes and functions for processing an ECG waveform.
 By: Sebastian D. Goodfellow, Ph.D., 2018
 """
 
@@ -66,6 +66,7 @@ class ECG(object):
         self._normalize()
 
     def get_dictionary(self):
+        """Return a dictionary of processed ECG waveforms and features."""
         return {'label_str': self.label_str, 'label_int': self.label_int, 'time': self.time, 'waveform': self.waveform,
                 'filtered': self.filtered, 'templates': self.templates, 'rpeak_count': self.rpeak_count,
                 'rpeaks_ps': self.rpeaks_ps, 'rpeaks_ts': self.rpeaks_ts, 'length': self.length,
@@ -80,20 +81,21 @@ class ECG(object):
         scaler = scaler.fit(self.waveform.reshape(-1, 1))
 
         # Scale signal
-        self.waveform = scaler.transform(self.waveform).reshape(-1,)
+        self.waveform = scaler.transform(self.waveform.reshape(-1, 1)).reshape(-1,)
 
     def _get_rpeaks(self):
-
+        """Hamilton-Tompkins r-peak detection."""
         # Get BioSPPy ecg object
         ecg_object = ecg.ecg(signal=self.waveform, sampling_rate=self.fs, show=False)
 
         return ecg_object['rpeaks']
 
     def _get_rpeaks_time_array(self):
+        """Get an array of r-peak times."""
         return self.rpeaks_ps * 1 / self.fs
 
     def _filter_waveform(self):
-
+        """Filter raw ECG waveform with bandpass finite-impulse-response filter."""
         # Calculate filter order
         order = int(0.3 * self.fs)
 
@@ -104,7 +106,7 @@ class ECG(object):
         return filtered
         
     def _get_templates(self, waveform, rpeaks, before, after):
-
+        """Extract waveform PQRST-templates."""
         # convert delimiters to samples
         before = int(before * self.fs)
         after = int(after * self.fs)
@@ -146,7 +148,7 @@ class ECG(object):
         return templates, rpeaks_new
 
     def _polarity_check(self):
-
+        """Correct for inverted polarity."""
         # Get extremes of median templates
         templates_min = np.min(np.median(self.templates, axis=1))
         templates_max = np.max(np.median(self.templates, axis=1))
@@ -159,7 +161,7 @@ class ECG(object):
             self.templates *= -1
 
     def _normalize(self):
-
+        """Normalize waveform to median r-peak amplitude."""
         # Get median templates max
         templates_max = np.max(np.median(self.templates, axis=1))
 
@@ -170,9 +172,11 @@ class ECG(object):
 
     @staticmethod
     def _get_waveform_length(waveform):
+        """Get waveform length in sample points."""
         return len(waveform)
 
     def _get_waveform_duration(self, waveform):
+        """Get waveform duration in seconds."""
         return len(waveform) * 1 / self.fs
 
 

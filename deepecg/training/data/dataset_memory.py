@@ -36,7 +36,7 @@ class WaveformDB(object):
         self.waveforms = None
 
     def load_database(self):
-        """Load """
+        """Load an existing WaveformDB database."""
         # Load labels
         self.labels = self._load_labels()
 
@@ -44,7 +44,7 @@ class WaveformDB(object):
         self.waveforms = self._unpickle()
 
     def build_database(self):
-        """"""
+        """Build a database from a folder of .mat files."""
         # Initialize waveforms dictionary
         self.waveforms = dict()
 
@@ -277,7 +277,7 @@ class TrainingDB(object):
         data['labels_val'] = self.labels_val
 
         # Set path
-        path = os.path.join(self.path, 'training')
+        path = os.path.join(self.path, 'training', 'memory')
 
         # Check for pickle directory
         if not os.path.exists(path):

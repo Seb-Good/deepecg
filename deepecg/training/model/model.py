@@ -16,8 +16,8 @@ import pickle
 import tensorflow as tf
 
 # Local imports
-from model.graph import Graph
-from networks.deep_ecg import DeepECG
+from deepecg.training.model.graph import Graph
+from deepecg.training.networks.deep_ecg_v1 import DeepECGV1
 
 
 class Model(object):

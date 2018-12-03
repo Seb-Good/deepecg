@@ -1,6 +1,6 @@
 """
-deep_ecg.py
------------
+deep_ecg_v1.py
+--------------
 This module provides a class and methods for building a 13 layer convolutional neural network with tensorflow.
 By: Sebastian D. Goodfellow, Ph.D., 2018
 """
@@ -15,7 +15,7 @@ import tensorflow as tf
 from networks.layers import fc_layer, conv_layer, max_pool_layer, batch_norm_layer, dropout_layer
 
 
-class DeepECG(object):
+class DeepECGV1(object):
 
     """Build the forward propagation computational graph from a 13 layer convolutional neural network."""
 
