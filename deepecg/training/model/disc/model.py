@@ -16,21 +16,22 @@ import pickle
 import tensorflow as tf
 
 # Local imports
-from deepecg.training.model.graph import Graph
+from deepecg.training.model.disc.graph import Graph
 from deepecg.training.networks.deep_ecg_v1 import DeepECGV1
 
 
 class Model(object):
 
-    """Builds a tensorflow graph given a network architecture and a set of hyper-parameters."""
+    """A class for managing a model through training."""
 
-    def __init__(self, model_name, network_name, network_parameters, save_path, max_to_keep):
+    def __init__(self, model_name, network_name, network_parameters, save_path, data_path, max_to_keep):
 
         # Set input parameters
         self.model_name = model_name
         self.network_name = network_name
         self.network_parameters = network_parameters
         self.save_path = os.path.join(save_path, self.model_name)
+        self.data_path = data_path
         self.max_to_keep = max_to_keep
 
         # Set attributes
@@ -52,17 +53,18 @@ class Model(object):
         # Get neural network
         self.network = self._get_neural_network()
 
+        # Save network object
+        self._pickle_network()
+
         # Build computational graph
-        self.graph = Graph(network=self.network, save_path=self.save_path, max_to_keep=self.max_to_keep)
+        self.graph = Graph(network=self.network, save_path=self.save_path, data_path=self.data_path,
+                           max_to_keep=self.max_to_keep)
 
         # Start session
-        self.sess = tf.Session()
+        self.sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 
         # Initialize global variables
         self.sess.run(self.graph.init_global)
-
-        # Save network object
-        self._pickle_network()
 
     @classmethod
     def build_training_graph(cls, save_path):
@@ -76,7 +78,7 @@ class Model(object):
         # Initialize Model
         return cls(model_name=model_parameters['model_name'], network_name=model_parameters['network_name'],
                    network_parameters=network_parameters,  save_path=os.path.dirname(save_path),
-                   max_to_keep=model_parameters['max_to_keep'])
+                   data_path=model_parameters['data_path'], max_to_keep=model_parameters['max_to_keep'])
 
     def restore(self, global_step):
         """Restore model from checkpoint."""
@@ -105,8 +107,8 @@ class Model(object):
     def _save_model_parameters(self):
         """Save model parameters to JSON."""
         # Get model parameters
-        model_parameters = dict(model_name=self.model_name, network_name=self.network_name,
-                                max_to_keep=self.max_to_keep)
+        model_parameters = dict(model_name=self.model_name, network_name=self.network_name, save_path=self.save_path,
+                                data_path=self.data_path, max_to_keep=self.max_to_keep)
 
         # Save model parameters to JSON
         if not os.path.exists(os.path.join(self.save_path, 'parameters', 'model_parameters.json')):
@@ -132,7 +134,7 @@ class Model(object):
     def _create_folder_structure(self):
 
         # Set list of folders
-        folders = ['training', 'validation', 'checkpoints', 'network', 'graph', 'logs', 'parameters']
+        folders = ['train', 'val', 'checkpoints', 'network', 'graph', 'logs', 'parameters']
 
         # Main project directory
         if not os.path.exists(self.save_path):

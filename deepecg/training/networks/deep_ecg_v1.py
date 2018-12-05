@@ -12,12 +12,20 @@ from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 
 # Local imports
-from networks.layers import fc_layer, conv_layer, max_pool_layer, batch_norm_layer, dropout_layer
+from deepecg.training.train.disc.data_generator import DataGenerator
+from deepecg.training.networks.layers import fc_layer, conv_layer, max_pool_layer, batch_norm_layer, dropout_layer
 
 
 class DeepECGV1(object):
 
-    """Build the forward propagation computational graph from a 13 layer convolutional neural network."""
+    """
+    Build the forward propagation computational graph from a 13 layer convolutional neural network.
+
+    Reference:
+    Goodfellow, S. D., A. Goodwin, R. Greer, P. C. Laussen, M. Mazwi, and D. Eytan, Towards understanding ECG
+    rhythm classification using convolutional neural networks and attention mappings, Proceedings of Machine
+    Learning for Healthcare 2018 JMLR W&C Track Volume 85, Aug 17–18, 2018, Stanford, California, USA.
+    """
 
     def __init__(self, length, channels, classes, seed=0):
 
@@ -27,14 +35,14 @@ class DeepECGV1(object):
         self.classes = classes
         self.seed = seed
 
-    def inference(self, input_layer, is_training):
+    def inference(self, input_layer, reuse, is_training, name, print_shape=True):
         """Forward propagation of computational graph."""
         # Check input layer dimensions
         assert input_layer.shape[1] == self.length
         assert input_layer.shape[2] == self.channels
 
         # Define a scope for reusing the variables
-        with tf.variable_scope('DeepECG', reuse=tf.AUTO_REUSE):
+        with tf.variable_scope(name, reuse=reuse):
 
             ###############################################################
             # ------------------ Convolutional Layer 1 ------------------ #
@@ -42,8 +50,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=input_layer, kernel_size=24, strides=1, filters=320, padding='SAME',
-                             activation=None, use_bias=True, name='conv1', seed=self.seed, collections=['train_full'],
-                             dilation_rate=1)
+                             activation=None, use_bias=True, name='conv1', seed=self.seed, dilation_rate=1)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm1')
@@ -64,8 +71,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=16, strides=1, filters=256, padding='SAME',
-                             activation=None, use_bias=True, name='conv2', seed=self.seed, collections=['train_full'],
-                             dilation_rate=2)
+                             activation=None, use_bias=True, name='conv2', seed=self.seed, dilation_rate=2)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm2')
@@ -83,8 +89,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=16, strides=1, filters=256, padding='SAME',
-                             activation=None, use_bias=True, name='conv3', seed=self.seed, collections=['train_full'],
-                             dilation_rate=4)
+                             activation=None, use_bias=True, name='conv3', seed=self.seed, dilation_rate=4)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm3')
@@ -102,8 +107,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=16, strides=1, filters=256, padding='SAME',
-                             activation=None, use_bias=True, name='conv4', seed=self.seed, collections=['train_full'],
-                             dilation_rate=4)
+                             activation=None, use_bias=True, name='conv4', seed=self.seed, dilation_rate=4)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm4')
@@ -121,8 +125,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=16, strides=1, filters=256, padding='SAME',
-                             activation=None, use_bias=True, name='conv5', seed=self.seed, collections=['train_full'],
-                             dilation_rate=4)
+                             activation=None, use_bias=True, name='conv5', seed=self.seed, dilation_rate=4)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm5')
@@ -140,8 +143,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv6', seed=self.seed, collections=['train_full'],
-                             dilation_rate=4)
+                             activation=None, use_bias=True, name='conv6', seed=self.seed, dilation_rate=4)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm6')
@@ -162,8 +164,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv7', seed=self.seed, collections=['train_full'],
-                             dilation_rate=6)
+                             activation=None, use_bias=True, name='conv7', seed=self.seed, dilation_rate=6)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm7')
@@ -181,8 +182,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv8', seed=self.seed, collections=['train_full'],
-                             dilation_rate=6)
+                             activation=None, use_bias=True, name='conv8', seed=self.seed, dilation_rate=6)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm8')
@@ -200,8 +200,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv9', seed=self.seed, collections=['train_full'],
-                             dilation_rate=6)
+                             activation=None, use_bias=True, name='conv9', seed=self.seed, dilation_rate=6)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm9')
@@ -219,8 +218,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv10', seed=self.seed,
-                             collections=['train_full'], dilation_rate=6)
+                             activation=None, use_bias=True, name='conv10', seed=self.seed, dilation_rate=6)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm10')
@@ -238,8 +236,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv11', seed=self.seed,
-                             collections=['train_full'], dilation_rate=8)
+                             activation=None, use_bias=True, name='conv11', seed=self.seed, dilation_rate=8)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm11')
@@ -260,8 +257,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=64, padding='SAME',
-                             activation=None, use_bias=True, name='conv12', seed=self.seed,
-                             collections=['train_full'], dilation_rate=8)
+                             activation=None, use_bias=True, name='conv12', seed=self.seed, dilation_rate=8)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm12')
@@ -279,8 +275,7 @@ class DeepECGV1(object):
 
             # Convolution
             net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=64, padding='SAME',
-                             activation=None, use_bias=True, name='conv13', seed=self.seed,
-                             collections=['train_full'], dilation_rate=8)
+                             activation=None, use_bias=True, name='conv13', seed=self.seed, dilation_rate=8)
 
             # Batch Norm
             net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm13')
@@ -307,28 +302,28 @@ class DeepECGV1(object):
             ###############################################################
 
             # Activation
-            logits = fc_layer(input_layer=gap, neurons=self.classes, activation=None, use_bias=False, name='logits',
-                              seed=self.seed, collections=['train_full'])
+            logits = fc_layer(input_layer=gap, neurons=self.classes, activation=None, use_bias=False,
+                              name='logits', seed=self.seed)
 
         return logits, net
 
     def create_placeholders(self):
-        """Creates place holders: x, and y."""
-        with tf.variable_scope('x') as scope:
-            x = tf.placeholder(dtype=tf.float32, shape=[None, self.length, self.channels], name=scope.name)
+        """Creates place holders: waveform and label."""
+        with tf.variable_scope('waveform') as scope:
+            waveform = tf.placeholder(dtype=tf.float32, shape=[None, self.length, self.channels], name=scope.name)
 
-        with tf.variable_scope('y') as scope:
-            y = tf.placeholder(dtype=tf.float32, shape=[None, self.classes], name=scope.name)
+        with tf.variable_scope('label') as scope:
+            label = tf.placeholder(dtype=tf.int32, shape=[None, self.classes], name=scope.name)
 
-        return x, y
+        return waveform, label
+
+    def create_generator(self, path, mode, batch_size):
+        """Create data generator graph operation."""
+        return DataGenerator(path=path, mode=mode, shape=[self.length, self.channels],
+                             batch_size=batch_size, prefetch_buffer=200, seed=0, num_parallel_calls=32)
 
     @staticmethod
     def compute_accuracy(logits, labels):
         """Computes the model accuracy for set of logits (predicted) and labels (true)."""
         with tf.variable_scope('accuracy'):
-            return tf.reduce_mean(tf.cast(tf.equal(tf.argmax(logits, axis=1), tf.argmax(labels, axis=1)), 'float'))
-
-    @staticmethod
-    def get_var_list():
-        """Get list of parameters trainable parameters."""
-        return tf.trainable_variables()
+            return tf.reduce_mean(tf.cast(tf.equal(tf.argmax(logits, axis=1), tf.cast(labels, tf.int64)), 'float'))

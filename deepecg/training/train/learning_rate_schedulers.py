@@ -34,7 +34,7 @@ class AnnealingRestartScheduler(object):
         self.steps_since_restart = 0
         self.next_restart = self.epochs_per_cycle
 
-    def on_mini_batch_end_update(self):
+    def on_batch_end_update(self):
         """Update at the end of each mini-batch."""
         # Update steps since restart
         self.steps_since_restart += 1

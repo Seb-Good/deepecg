@@ -138,7 +138,8 @@ class TrainingDB(object):
 
         else:
             # Save waveform
-            self._save_waveform(waveform=waveform, dataset=dataset, file_name=file_name)
+            self._save_waveform(waveform=self._zero_pad(waveform=waveform, align='center'),
+                                dataset=dataset, file_name=file_name)
 
             # Add label
             labels.append({'dataset': dataset, 'file_name': file_name, 'label': label})
@@ -171,7 +172,7 @@ class TrainingDB(object):
     def generate(self):
         """Generate training dataset."""
         outputs = Parallel(n_jobs=-1)(delayed(self._process_waveform)(idx)
-                                      for idx in self.labels.index[0:100])
+                                      for idx in self.labels.index)
 
         # Save labels
         self._save_labels(outputs=outputs)

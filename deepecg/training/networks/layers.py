@@ -12,7 +12,7 @@ from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 
 
-def fc_layer(input_layer, neurons, activation, use_bias, name, seed, collections):
+def fc_layer(input_layer, neurons, activation, use_bias, name, seed):
 
     # Create fully connected layer
     fc = tf.layers.dense(
@@ -25,14 +25,11 @@ def fc_layer(input_layer, neurons, activation, use_bias, name, seed, collections
         name=name
     )
 
-    # Get histogram summaries
-    tf.summary.histogram(name=name, values=fc, collections=collections)
-
     return fc
 
 
 def conv_layer(input_layer, kernel_size, strides, dilation_rate, filters, padding, activation,
-               use_bias, name, seed, collections):
+               use_bias, name, seed):
 
     # Create convolutional layer
     conv = tf.layers.conv1d(
@@ -48,9 +45,6 @@ def conv_layer(input_layer, kernel_size, strides, dilation_rate, filters, paddin
         activation=activation,
         use_bias=use_bias
     )
-
-    # Get histogram summaries
-    tf.summary.histogram(name=name, values=conv, collections=collections)
 
     return conv
 
