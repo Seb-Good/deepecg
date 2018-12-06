@@ -34,22 +34,18 @@ class Logger(object):
         self.start_time = time.time()
         self.start_datetime = str(datetime.utcnow())
         self.global_steps = self.epochs * self.num_train_batches
+        self.previous_time = self.start_time
+        self.saver = None
         self.logger = None
         self.best_model = None
-        self.saver = None
-        self.previous_time = self.start_time
 
-        # Setup logger
+        # Logging setup
         self._setup_logger()
-
-        # Setup CSV
         self._setup_csv()
-
-        # Start logging
-        self._start_logging()
+        self._start_log()
 
     def _setup_logger(self):
-
+        """Setup logger handlers."""
         # Logger
         self.logger = logging.getLogger(name=__name__)
         self.logger.setLevel(logging.INFO)
@@ -65,17 +61,12 @@ class Logger(object):
         self.logger.addHandler(hdlr=file_handler)
 
     def _setup_csv(self):
-
-        # Import/create logger CSV
+        """Import/create logger CSV."""
         if os.path.exists(os.path.join(self.save_path, 'logs', 'training.csv')):
-
-            # Import
             self.csv = pd.read_csv(os.path.join(self.save_path, 'logs', 'training.csv'))
-
         else:
-            # Create
-            self.csv = pd.DataFrame(data=[], columns=['epoch', 'steps', 'train_time', 'epoch_time', 'lr', 'train_loss',
-                                                      'val_loss', 'train_acc', 'val_acc'])
+            self.csv = pd.DataFrame(data=[], columns=['epoch', 'steps', 'train_time', 'epoch_time', 'lr',
+                                                      'train_loss', 'val_loss', 'train_acc', 'val_acc'])
 
     def _compute_training_time(self):
         """Compute elapsed time from start of training."""
@@ -103,46 +94,46 @@ class Logger(object):
         return self._compute_training_time() / self.epochs
 
     def _log_training_parameters(self):
-        self.logger.info('\nTraining Parameters :')
-        self.logger.info('Mini-Batch Size : {:d}'.format(self.batch_size))
-        self.logger.info('Training-Batches : {:d}'.format(self.num_train_batches))
-        self.logger.info('Global Steps : {:.0f}'.format(self.global_steps))
-        self.logger.info('Epochs : {}'.format(self.epochs))
+        self.logger.info('\nTraining Parameters:')
+        self.logger.info('Global Steps: {:.0f}'.format(self.global_steps))
+        self.logger.info('Epochs: {}'.format(self.epochs))
+        self.logger.info('Batch Size: {:d}'.format(self.batch_size))
+        self.logger.info('Training Batches: {:d}'.format(self.num_train_batches))
 
-    def _log_start_conditions(self):
-        self.logger.info('\nStarting Conditions :')
-        self._log_conditions()
+    def _log_start_state(self):
+        self.logger.info('\nStart State:')
+        self._log_state()
 
-    def _log_end_conditions(self):
-        self.logger.info('\nEnding Conditions :')
-        self._log_conditions()
+    def _log_end_state(self):
+        self.logger.info('\nEnd State:')
+        self._log_state()
 
-    def _log_conditions(self):
-        self.logger.info('Datetime : {:%Y-%m-%d %H:%M}'.format(datetime.utcnow()))
-        self.logger.info('Learning Rate : {:.2e}'.format(self.monitor.learning_rate))
-        self.logger.info('Global Step : {:.0f}'.format(self.monitor.current_state.global_step))
-        self.logger.info('Epoch : {:.0f}'.format(self.monitor.current_state.epoch))
-        self.logger.info('Training Loss : {:.6f}'.format(self.monitor.current_state.train_loss))
-        self.logger.info('Validation Loss : {:.6f}'.format(self.monitor.current_state.val_loss))
-        self.logger.info('Training Accuracy : {:.3f}'.format(self.monitor.current_state.train_accuracy * 100))
-        self.logger.info('Validation Accuracy : {:.3f}'.format(self.monitor.current_state.val_accuracy * 100))
+    def _log_state(self):
+        self.logger.info('Datetime: {:%Y-%m-%d %H:%M}'.format(datetime.utcnow()))
+        self.logger.info('Learning Rate: {:.2e}'.format(self.monitor.learning_rate))
+        self.logger.info('Global Step: {:.0f}'.format(self.monitor.current_state.global_step))
+        self.logger.info('Epoch: {:.0f}'.format(self.monitor.current_state.epoch))
+        self.logger.info('Training Loss: {:.6f}'.format(self.monitor.current_state.train_loss))
+        self.logger.info('Validation Loss: {:.6f}'.format(self.monitor.current_state.val_loss))
+        self.logger.info('Training Accuracy: {:.3f}'.format(self.monitor.current_state.train_accuracy * 100))
+        self.logger.info('Validation Accuracy: {:.3f}'.format(self.monitor.current_state.val_accuracy * 100))
 
     def _log_time_summary(self):
-        self.logger.info('\nTime Summary :')
-        self.logger.info('Total Time : {:.2f} hours'.format(self._compute_training_time() / 3600.))
-        self.logger.info('Time Per Global Step : {:.6f} seconds'.format(self._compute_mean_global_step_time()))
-        self.logger.info('Time Per Epoch : {:.6f} seconds'.format(self._compute_mean_epoch_time()))
+        self.logger.info('\nTime Summary:')
+        self.logger.info('Total Time: {:.2f} hours'.format(self._compute_training_time() / 3600.))
+        self.logger.info('Time Per Global Step: {:.6f} seconds'.format(self._compute_mean_global_step_time()))
+        self.logger.info('Time Per Epoch: {:.6f} seconds'.format(self._compute_mean_epoch_time()))
 
     def _log_best_model(self):
         self.logger.info('\nBest Model:')
-        self.logger.info('Datetime : {}'.format(self.monitor.best_state.datetime))
-        self.logger.info('Learning Rate : {:.2e}'.format(self.monitor.best_state.learning_rate))
-        self.logger.info('Global Step : {:.0f}'.format(self.monitor.best_state.global_step))
-        self.logger.info('Epoch : {:.0f}'.format(self.monitor.best_state.epoch))
-        self.logger.info('Training Loss : {:.6f}'.format(self.monitor.best_state.train_loss))
-        self.logger.info('Validation Loss : {:.6f}'.format(self.monitor.best_state.val_loss))
-        self.logger.info('Training Accuracy : {:.3f}'.format(self.monitor.current_state.train_accuracy * 100))
-        self.logger.info('Validation Accuracy : {:.3f}'.format(self.monitor.current_state.val_accuracy * 100))
+        self.logger.info('Datetime: {}'.format(self.monitor.best_state.datetime))
+        self.logger.info('Learning Rate: {:.2e}'.format(self.monitor.best_state.learning_rate))
+        self.logger.info('Global Step: {:.0f}'.format(self.monitor.best_state.global_step))
+        self.logger.info('Epoch: {:.0f}'.format(self.monitor.best_state.epoch))
+        self.logger.info('Training Loss: {:.6f}'.format(self.monitor.best_state.train_loss))
+        self.logger.info('Validation Loss: {:.6f}'.format(self.monitor.best_state.val_loss))
+        self.logger.info('Training Accuracy: {:.3f}'.format(self.monitor.current_state.train_accuracy * 100))
+        self.logger.info('Validation Accuracy: {:.3f}'.format(self.monitor.current_state.val_accuracy * 100))
 
     def _is_best(self):
         """Check for improvement."""
@@ -152,8 +143,7 @@ class Logger(object):
             return ''
 
     def _get_training_log_string(self):
-
-        # Set log string
+        """Generate log string."""
         log_string = 'Epoch {0:.0f}, Step {1}, T-Time: {2:.3f} hr, E-Time: {3:.3f} min, lr: {4:.2e}, ' + \
                      'Train Loss: {5:.6f}, Val Loss: {6:.6f}, Train Acc: {7:.3f} %, Val Acc: {8:.3f} % {9}'
 
@@ -170,26 +160,24 @@ class Logger(object):
             # Update current model state
             self.monitor = monitor
 
-            # Get training log string
+            # Get log string
             training_log_string = self._get_training_log_string()
 
-            # Log training
+            # Log training state
             self.logger.info(training_log_string)
 
             # Log training for CSV
             self._log_csv()
 
     def _close_logger(self):
-        # Loop through handlers
+        """Close all logger handlers."""
         for handler in self.logger.handlers:
 
-            # Close handler
+            # Close handler and from logger
             handler.close()
-
-            # Remove handler from logger
             self.logger.removeHandler(handler)
 
-        # Save logs CSV
+        # Save logs as CSV
         self._save_csv()
 
     def _log_csv(self):
@@ -210,30 +198,18 @@ class Logger(object):
                               train_loss=self.monitor.current_state.train_loss,
                               val_loss=self.monitor.current_state.val_loss))
 
-    def _start_logging(self):
-        # Log all parameters at beginning of training
-        self.logger.info('**************************\n*** Start Training ***\n**************************')
-
-        # Log training parameters
+    def _start_log(self):
+        """Log starting state."""
+        self.logger.info('*** Start Training ***')
         self._log_training_parameters()
-
-        # Log start conditions
-        self._log_start_conditions()
-
+        self._log_start_state()
         self.logger.info('\nTraining Logs :')
         self.log_training(monitor=self.monitor)
 
-    def end_logging(self):
-        # Log end conditions
-        self._log_end_conditions()
-
-        # Log training time summary
+    def end_log(self):
+        """Log ending state."""
+        self._log_end_state()
         self._log_time_summary()
-
-        # Lof best model
         self._log_best_model()
-
-        self.logger.info('\n************************\n*** End Training ***\n************************\n\n\n')
-
-        # Close logger
+        self.logger.info('\n*** End Training ***\n\n\n')
         self._close_logger()
