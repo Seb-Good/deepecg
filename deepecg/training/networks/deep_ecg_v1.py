@@ -9,7 +9,9 @@ By: Sebastian D. Goodfellow, Ph.D., 2018
 from __future__ import absolute_import, division, print_function
 
 # 3rd party imports
+import numpy as np
 import tensorflow as tf
+from sklearn.metrics import f1_score
 
 # Local imports
 from deepecg.training.train.disc.data_generator import DataGenerator
@@ -305,7 +307,51 @@ class DeepECGV1(object):
             logits = fc_layer(input_layer=gap, neurons=self.classes, activation=None, use_bias=False,
                               name='logits', seed=self.seed)
 
-        return logits, net
+            # Compute Class Activation Maps
+            cams = self._get_cams(net=net, is_training=is_training)
+
+        return logits, net, cams
+
+    def _get_cams(self, net, is_training):
+        """Collect class activation maps (CAMs)."""
+        # Empty list for class activation maps
+        cams = dict()
+
+        # Compute class activation map
+        if is_training is not None:
+            for label in range(self.classes):
+                cams[label] = self._compute_cam(net=net, label=label)
+
+        return cams
+
+    def _compute_cam(self, net, label):
+        """Compute class activation map (CAM) for specified label."""
+        # Compute logits weights
+        weights = self._get_logit_weights(net=net, label=label)
+
+        # Compute class activation map
+        cam = tf.matmul(net, weights)
+
+        return cam
+
+    def _get_logit_weights(self, net, label):
+        """Get logits weights for specified label."""
+        # Get number of filters in the final output
+        num_filters = int(net.shape[-1])
+
+        with tf.variable_scope('logits', reuse=True):
+            weights = tf.gather(tf.transpose(tf.get_variable('kernel')), label)
+            weights = tf.reshape(weights, [-1, num_filters, 1])
+
+        # Reshape weights
+        weights = self._reshape_logit_weights(net=net, weights=weights)
+
+        return weights
+
+    @staticmethod
+    def _reshape_logit_weights(net, weights):
+        """Reshape logits shapes to batch size for multiplication with net output."""
+        return tf.tile(input=weights, multiples=[tf.shape(net)[0], 1, 1])
 
     def create_placeholders(self):
         """Creates place holders: waveform and label."""
@@ -313,7 +359,7 @@ class DeepECGV1(object):
             waveform = tf.placeholder(dtype=tf.float32, shape=[None, self.length, self.channels], name=scope.name)
 
         with tf.variable_scope('label') as scope:
-            label = tf.placeholder(dtype=tf.int32, shape=[None, self.classes], name=scope.name)
+            label = tf.placeholder(dtype=tf.int32, shape=[None], name=scope.name)
 
         return waveform, label
 
@@ -327,3 +373,20 @@ class DeepECGV1(object):
         """Computes the model accuracy for set of logits (predicted) and labels (true)."""
         with tf.variable_scope('accuracy'):
             return tf.reduce_mean(tf.cast(tf.equal(tf.argmax(logits, axis=1), tf.cast(labels, tf.int64)), 'float'))
+
+    def compute_f1(self, logits, labels):
+        """Computes the model f1 score for set of logits and labels."""
+        with tf.variable_scope('f1'):
+
+            # Get prediction
+            predictions = tf.cast(tf.argmax(logits, axis=1), tf.int32)
+
+            # Get label
+            labels = tf.cast(labels, tf.int32)
+
+            return tf.py_func(func=self._compute_f1, inp=[predictions, labels], Tout=[tf.float64])
+
+    @staticmethod
+    def _compute_f1(predictions, labels):
+        """Compute the mean f1 score."""
+        return np.mean(f1_score(labels, predictions, labels=[0, 1, 2, 3], average=None)[0:3])

@@ -19,7 +19,7 @@ from deepecg.training.utils.devices.device_check import get_device_count
 from deepecg.training.train.learning_rate_schedulers import AnnealingRestartScheduler
 
 
-def train(model, learning_rate_start, epochs, batch_size):
+def train(model, epochs, batch_size):
     """Trains a tf computational graph."""
     # Start Tensorflow session context
     with model.sess as sess:
@@ -27,15 +27,19 @@ def train(model, learning_rate_start, epochs, batch_size):
         # Get number of GPUs
         num_gpus = get_device_count(device_type='GPU')
 
-        # Initialize model model_tracker
-        monitor = Monitor(sess=sess, graph=model.graph, learning_rate=learning_rate_start, batch_size=batch_size,
-                          save_path=model.save_path, num_gpus=num_gpus)
-
         # Get number of training batches
         num_train_batches = model.graph.generator_train.num_batches.eval(feed_dict={model.graph.batch_size: batch_size})
 
         # Get number of batch steps per epoch
         steps_per_epoch = int(np.ceil(num_train_batches / num_gpus))
+
+        # Initialize learning rate scheduler
+        lr_scheduler = AnnealingRestartScheduler(lr_min=1e-5, lr_max=1e-3, steps_per_epoch=steps_per_epoch,
+                                                 lr_max_decay=0.6, epochs_per_cycle=epochs, cycle_length_factor=1.5)
+
+        # Initialize model model_tracker
+        monitor = Monitor(sess=sess, graph=model.graph, learning_rate=lr_scheduler.lr, batch_size=batch_size,
+                          save_path=model.save_path, num_gpus=num_gpus)
 
         # Initialize logger
         logger = Logger(monitor=monitor, epochs=epochs, save_path=model.save_path,
@@ -46,13 +50,7 @@ def train(model, learning_rate_start, epochs, batch_size):
 
         # Initialize summary writer
         summary_writer = Summaries(sess=sess, graph=model.graph, path=model.save_path)
-
-        # Log starting summaries
         summary_writer.log_scalar_summaries(monitor=monitor)
-
-        # Initialize learning rate scheduler
-        lr_scheduler = AnnealingRestartScheduler(lr_min=1e-5, lr_max=1e-2, steps_per_epoch=steps_per_epoch,
-                                                 lr_max_decay=0.6, epochs_per_cycle=epochs, cycle_length_factor=1.5)
 
         # Loop through epochs
         for epoch in range(epochs):
@@ -97,7 +95,7 @@ def train(model, learning_rate_start, epochs, batch_size):
         monitor.end_monitoring()
 
         # End logging
-        logger.end_logging()
+        logger.end_log()
 
         # Close summary writers
         summary_writer.close_summaries()

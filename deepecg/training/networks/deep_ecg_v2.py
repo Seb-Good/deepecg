@@ -9,22 +9,22 @@ By: Sebastian D. Goodfellow, Ph.D., 2018
 from __future__ import absolute_import, division, print_function
 
 # 3rd party imports
+import numpy as np
 import tensorflow as tf
 
 # Local imports
 from deepecg.training.train.disc.data_generator import DataGenerator
-from deepecg.training.networks.layers import fc_layer, conv_layer, max_pool_layer, batch_norm_layer, dropout_layer
+from deepecg.training.networks.layers import fc_layer, conv_layer, max_pool_layer, avg_pool_layer, \
+                                             batch_norm_layer, dropout_layer, print_output_shape
 
 
 class DeepECGV2(object):
 
     """
-    Build the forward propagation computational graph from a 13 layer convolutional neural network.
+    Build the forward propagation computational graph for an Inception-V4 inspired deep neural network.
 
-    Reference:
-    Goodfellow, S. D., A. Goodwin, R. Greer, P. C. Laussen, M. Mazwi, and D. Eytan, Towards understanding ECG
-    rhythm classification using convolutional neural networks and attention mappings, Proceedings of Machine
-    Learning for Healthcare 2018 JMLR W&C Track Volume 85, Aug 17–18, 2018, Stanford, California, USA.
+    Szegedy, C., Ioffe, S., Vanhoucke, V. (2016) Inception-v4, inception-resnet and the impact of residual
+    connections on learning (2016). arXiv:1602.07261
     """
 
     def __init__(self, length, channels, classes, seed=0):
@@ -44,268 +44,273 @@ class DeepECGV2(object):
         # Define a scope for reusing the variables
         with tf.variable_scope(name, reuse=reuse):
 
-            ###############################################################
-            # ------------------ Convolutional Layer 1 ------------------ #
-            ###############################################################
+            """Network Stem"""
+            # --- Layer 1 (Convolution) ------------------------------------------------------------------------------ #
 
-            # Convolution
-            net = conv_layer(input_layer=input_layer, kernel_size=24, strides=1, filters=320, padding='SAME',
-                             activation=None, use_bias=True, name='conv1', seed=self.seed, dilation_rate=1)
+            # Set name
+            layer_name = 'layer_1'
 
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm1')
+            # Set layer scope
+            with tf.variable_scope(layer_name):
+                # Convolution
+                net = conv_layer(input_layer=input_layer, kernel_size=3, strides=2, dilation_rate=1,
+                                 filters=32, padding='VALID', activation=tf.nn.relu, use_bias=True,
+                                 name=layer_name + '_conv_ks3_dr1', seed=self.seed)
 
-            # Activation
-            with tf.variable_scope('relu1') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Max Pool
-            net = max_pool_layer(input_layer=net, pool_size=2, strides=2, padding='SAME', name='maxpool1')
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout1')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 2 ------------------ #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=16, strides=1, filters=256, padding='SAME',
-                             activation=None, use_bias=True, name='conv2', seed=self.seed, dilation_rate=2)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm2')
-
-            # Activation
-            with tf.variable_scope('relu2') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout2')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 3 ------------------ #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=16, strides=1, filters=256, padding='SAME',
-                             activation=None, use_bias=True, name='conv3', seed=self.seed, dilation_rate=4)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm3')
-
-            # Activation
-            with tf.variable_scope('relu3') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout3')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 4 ------------------ #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=16, strides=1, filters=256, padding='SAME',
-                             activation=None, use_bias=True, name='conv4', seed=self.seed, dilation_rate=4)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm4')
-
-            # Activation
-            with tf.variable_scope('relu4') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout4')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 5 ------------------ #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=16, strides=1, filters=256, padding='SAME',
-                             activation=None, use_bias=True, name='conv5', seed=self.seed, dilation_rate=4)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm5')
-
-            # Activation
-            with tf.variable_scope('relu5') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout5')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 6 ------------------ #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv6', seed=self.seed, dilation_rate=4)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm6')
-
-            # Activation
-            with tf.variable_scope('relu6') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Max Pool
-            net = max_pool_layer(input_layer=net, pool_size=2, strides=2, padding='SAME', name='maxpool6')
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout6')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 7 ------------------ #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv7', seed=self.seed, dilation_rate=6)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm7')
-
-            # Activation
-            with tf.variable_scope('relu7') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout7')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 8 ------------------ #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv8', seed=self.seed, dilation_rate=6)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm8')
-
-            # Activation
-            with tf.variable_scope('relu8') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout8')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 9 ------------------ #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv9', seed=self.seed, dilation_rate=6)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm9')
-
-            # Activation
-            with tf.variable_scope('relu9') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout9')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 10 ----------------- #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv10', seed=self.seed, dilation_rate=6)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm10')
-
-            # Activation
-            with tf.variable_scope('relu10') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout10')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 11 ----------------- #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=128, padding='SAME',
-                             activation=None, use_bias=True, name='conv11', seed=self.seed, dilation_rate=8)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm11')
-
-            # Activation
-            with tf.variable_scope('relu11') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Max Pool
-            net = max_pool_layer(input_layer=net, pool_size=2, strides=2, padding='SAME', name='maxpool11')
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout11')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 12 ----------------- #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=64, padding='SAME',
-                             activation=None, use_bias=True, name='conv12', seed=self.seed, dilation_rate=8)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm12')
-
-            # Activation
-            with tf.variable_scope('relu12') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout12')
-
-            ###############################################################
-            # ------------------ Convolutional Layer 13 ----------------- #
-            ###############################################################
-
-            # Convolution
-            net = conv_layer(input_layer=net, kernel_size=8, strides=1, filters=64, padding='SAME',
-                             activation=None, use_bias=True, name='conv13', seed=self.seed, dilation_rate=8)
-
-            # Batch Norm
-            net = batch_norm_layer(input_layer=net, training=is_training, name='batchnorm13')
-
-            # Activation
-            with tf.variable_scope('relu13') as scope:
-                net = tf.nn.relu(net, name=scope.name)
-
-            # Dropout
-            net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training, name='dropout13')
-
-            ###############################################################
-            # -------------- Global Average Pooling Layer --------------- #
-            ###############################################################
-
-            # Global average pooling layer
+                # Batch Norm
+                net = batch_norm_layer(input_layer=net, training=is_training, name=layer_name + '_batchnorm')
+
+                # Dropout
+                net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training,
+                                    name=layer_name + '_dropout')
+
+            # Print shape
+            print_output_shape(layer_name=layer_name, net=net, print_shape=print_shape)
+
+            # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_2'
+
+            # Set layer scope
+            with tf.variable_scope(layer_name):
+                # Convolution
+                net = conv_layer(input_layer=net, kernel_size=3, strides=1, dilation_rate=1,
+                                 filters=32, padding='VALID', activation=tf.nn.relu, use_bias=True,
+                                 name=layer_name + '_conv_ks3_dr1', seed=self.seed)
+
+                # Batch Norm
+                net = batch_norm_layer(input_layer=net, training=is_training, name=layer_name + '_batchnorm')
+
+                # Dropout
+                net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training,
+                                    name=layer_name + '_dropout')
+
+            # Print shape
+            print_output_shape(layer_name=layer_name, net=net, print_shape=print_shape)
+
+            # --- Layer 3 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_3'
+
+            # Set layer scope
+            with tf.variable_scope(layer_name):
+                # Convolution
+                net = conv_layer(input_layer=net, kernel_size=3, strides=1, dilation_rate=1,
+                                 filters=64, padding='VALID', activation=tf.nn.relu, use_bias=True,
+                                 name=layer_name + '_conv_ks3_dr1', seed=self.seed)
+
+                # Batch Norm
+                net = batch_norm_layer(input_layer=net, training=is_training, name=layer_name + '_batchnorm')
+
+                # Dropout
+                net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training,
+                                    name=layer_name + '_dropout')
+
+            # Print shape
+            print_output_shape(layer_name=layer_name, net=net, print_shape=print_shape)
+
+            # --- Layer 4 (Mixed - Convolution) ---------------------------------------------------------------------- #
+
+            # Set name
+            layer_name = 'layer_4'
+
+            # Set layer scope
+            with tf.variable_scope(layer_name):
+                # Branch 0
+                with tf.variable_scope('branch_0'):
+                    # Max pool
+                    branch_0 = max_pool_layer(input_layer=net, pool_size=3, strides=2, padding='VALID',
+                                              name=layer_name + '_branch_0_a_maxpool_ps3')
+
+                # Branch 1
+                with tf.variable_scope('branch_1'):
+                    # Convolution
+                    branch_1 = conv_layer(input_layer=net, kernel_size=3, strides=2, dilation_rate=1,
+                                          filters=96, padding='VALID', activation=tf.nn.relu, use_bias=True,
+                                          name=layer_name + '_branch_1_a_conv_ks3_dr1', seed=self.seed)
+
+                # Merge branches
+                net = tf.concat(values=[branch_0, branch_1], axis=2)
+
+                # Batch Norm
+                net = batch_norm_layer(input_layer=net, training=is_training, name=layer_name + '_batchnorm')
+
+                # Dropout
+                net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training,
+                                    name=layer_name + '_dropout')
+
+            # Print shape
+            print_output_shape(layer_name=layer_name, net=net, print_shape=print_shape)
+
+            # --- Layer 5 (Mixed - Convolution) ---------------------------------------------------------------------- #
+
+            # Set name
+            layer_name = 'layer_5'
+
+            # Set layer scope
+            with tf.variable_scope(layer_name):
+                # Branch 0
+                with tf.variable_scope('branch_0'):
+                    # Convolution
+                    branch_0 = conv_layer(input_layer=net, kernel_size=1, strides=1, dilation_rate=1,
+                                          filters=64, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                          name=layer_name + '_branch_0_a_conv_ks1_dr1', seed=self.seed)
+                    branch_0 = conv_layer(input_layer=branch_0, kernel_size=3, strides=1, dilation_rate=1,
+                                          filters=96, padding='VALID', activation=tf.nn.relu, use_bias=True,
+                                          name=layer_name + '_branch_0_b_conv_ks3_dr1', seed=self.seed)
+
+                # Branch 1
+                with tf.variable_scope('branch_1'):
+                    # Convolution
+                    branch_1 = conv_layer(input_layer=net, kernel_size=1, strides=1, dilation_rate=1,
+                                          filters=64, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                          name=layer_name + '_branch_1_a_conv_ks1_dr1', seed=self.seed)
+                    branch_1 = conv_layer(input_layer=branch_1, kernel_size=7, strides=1, dilation_rate=2,
+                                          filters=64, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                          name=layer_name + '_branch_1_b_conv_ks7_dr2', seed=self.seed)
+                    branch_1 = conv_layer(input_layer=branch_1, kernel_size=7, strides=1, dilation_rate=4,
+                                          filters=64, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                          name=layer_name + '_branch_1_c_conv_ks7_dr4', seed=self.seed)
+                    branch_1 = conv_layer(input_layer=branch_1, kernel_size=3, strides=1, dilation_rate=1,
+                                          filters=96, padding='VALID', activation=tf.nn.relu, use_bias=True,
+                                          name=layer_name + '_branch_1_d_conv_ks3_dr1', seed=self.seed)
+
+                # Merge branches
+                net = tf.concat(values=[branch_0, branch_1], axis=2)
+
+                # Batch Norm
+                net = batch_norm_layer(input_layer=net, training=is_training, name=layer_name + '_batchnorm')
+
+                # Dropout
+                net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training,
+                                    name=layer_name + '_dropout')
+
+            # Print shape
+            print_output_shape(layer_name=layer_name, net=net, print_shape=print_shape)
+
+            # --- Layer 6 (Mixed - Convolution) ---------------------------------------------------------------------- #
+
+            # Set name
+            layer_name = 'layer_6'
+
+            # Set layer scope
+            with tf.variable_scope(layer_name):
+                # Branch 0
+                with tf.variable_scope('branch_0'):
+                    # Convolution
+                    branch_0 = conv_layer(input_layer=net, kernel_size=3, strides=2, dilation_rate=1,
+                                          filters=192, padding='VALID', activation=tf.nn.relu, use_bias=True,
+                                          name=layer_name + '_branch_0_a_conv_ks3_dr1', seed=self.seed)
+
+                # Branch 1
+                with tf.variable_scope('branch_1'):
+                    # Max pool
+                    branch_1 = max_pool_layer(input_layer=net, pool_size=3, strides=2, padding='VALID',
+                                              name=layer_name + '_branch_0_a_maxpool_ps3')
+
+                # Merge branches
+                net = tf.concat(values=[branch_0, branch_1], axis=2)
+
+                # Batch Norm
+                net = batch_norm_layer(input_layer=net, training=is_training, name=layer_name + '_batchnorm')
+
+                # Dropout
+                net = dropout_layer(input_layer=net, drop_rate=0.3, seed=self.seed, training=is_training,
+                                    name=layer_name + '_dropout')
+
+            # Print shape
+            print_output_shape(layer_name=layer_name, net=net, print_shape=print_shape)
+
+            """Inception-A (V4)"""
+            # Set number of Inception layers and previous layer
+            num_layers = 2
+            previous_layer = 6
+
+            for layer_id in np.arange(num_layers) + (previous_layer + 1):
+
+                # Set name
+                layer_name = 'layer_{}'.format(layer_id)
+
+                # Set layer scope
+                with tf.variable_scope(layer_name):
+                    # Inception-A (V4)
+                    net = self._inception_a(inputs=net, layer_name=layer_name)
+
+                    # Batch Norm
+                    net = batch_norm_layer(input_layer=net, training=is_training, name=layer_name + '_batchnorm')
+
+                # Print shape
+                print_output_shape(layer_name=layer_name, net=net, print_shape=print_shape)
+
+            """Reduction-A"""
+
+            """Inception-B"""
+
+            """Reduction-B"""
+
+            """Inception-C"""
+
+            """Network Output"""
+            # --- Global Average Pooling Layer ----------------------------------------------------------------------- #
+
+            # Set layer scope
             with tf.variable_scope('GAP'):
-
                 # Reduce mean along dimension 1
                 gap = tf.reduce_mean(input_tensor=net, axis=1)
 
-            ###############################################################
-            # ------------------------- Softmax ------------------------- #
-            ###############################################################
+            # --- Softmax Layer -------------------------------------------------------------------------------------- #
 
-            # Activation
+            # Softmax activation
             logits = fc_layer(input_layer=gap, neurons=self.classes, activation=None, use_bias=False,
                               name='logits', seed=self.seed)
 
         return logits, net
+
+    def _inception_a(self, inputs, layer_name):
+        """Builds Inception-A block (V4)."""
+        # Branch 0
+        with tf.variable_scope('branch_0'):
+            # Convolution
+            branch_0 = conv_layer(input_layer=inputs, kernel_size=1, strides=1, dilation_rate=1,
+                                  filters=96, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                  name=layer_name + '_branch_0_a_conv_ks1_dr1', seed=self.seed)
+
+        # Branch 1
+        with tf.variable_scope('branch_1'):
+            # Convolution
+            branch_1 = conv_layer(input_layer=inputs, kernel_size=1, strides=1, dilation_rate=1,
+                                  filters=64, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                  name=layer_name + '_branch_1_a_conv_ks1_dr1', seed=self.seed)
+            branch_1 = conv_layer(input_layer=branch_1, kernel_size=3, strides=1, dilation_rate=1,
+                                  filters=96, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                  name=layer_name + '_branch_1_b_conv_ks3_dr1', seed=self.seed)
+
+        # Branch 2
+        with tf.variable_scope('branch_2'):
+            # Convolution
+            branch_2 = conv_layer(input_layer=inputs, kernel_size=1, strides=1, dilation_rate=1,
+                                  filters=64, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                  name=layer_name + '_branch_2_a_conv_ks1_dr1', seed=self.seed)
+            branch_2 = conv_layer(input_layer=branch_2, kernel_size=3, strides=1, dilation_rate=3,
+                                  filters=96, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                  name=layer_name + '_branch_2_b_conv_ks3_dr1', seed=self.seed)
+            branch_2 = conv_layer(input_layer=branch_2, kernel_size=3, strides=1, dilation_rate=6,
+                                  filters=96, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                  name=layer_name + '_branch_2_c_conv_ks3_dr1', seed=self.seed)
+
+        # Branch 3
+        with tf.variable_scope('branch_3'):
+            # Convolution
+            branch_3 = conv_layer(input_layer=inputs, kernel_size=3, strides=1, dilation_rate=1,
+                                  filters=96, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                  name=layer_name + '_branch_3_a_conv_ks3_dr1', seed=self.seed)
+            branch_3 = conv_layer(input_layer=branch_3, kernel_size=1, strides=1, dilation_rate=1,
+                                  filters=64, padding='SAME', activation=tf.nn.relu, use_bias=True,
+                                  name=layer_name + '_branch_3_b_conv_ks1_dr1', seed=self.seed)
+
+        return tf.concat(values=[branch_0, branch_1, branch_2, branch_3], axis=2)
 
     def create_placeholders(self):
         """Creates place holders: waveform and label."""
@@ -313,14 +318,14 @@ class DeepECGV2(object):
             waveform = tf.placeholder(dtype=tf.float32, shape=[None, self.length, self.channels], name=scope.name)
 
         with tf.variable_scope('label') as scope:
-            label = tf.placeholder(dtype=tf.int32, shape=[None, self.classes], name=scope.name)
+            label = tf.placeholder(dtype=tf.int32, shape=[None], name=scope.name)
 
         return waveform, label
 
     def create_generator(self, path, mode, batch_size):
         """Create data generator graph operation."""
         return DataGenerator(path=path, mode=mode, shape=[self.length, self.channels],
-                             batch_size=batch_size, prefetch_buffer=200, seed=0, num_parallel_calls=32)
+                             batch_size=batch_size, prefetch_buffer=1500, seed=0, num_parallel_calls=32)
 
     @staticmethod
     def compute_accuracy(logits, labels):

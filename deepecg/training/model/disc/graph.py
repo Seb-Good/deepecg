@@ -36,6 +36,7 @@ class Graph(object):
         self.logits = None
         self.loss = None
         self.accuracy = None
+        self.f1 = None
         self.optimizer = None
         self.train_summary_all_op = None
         self.train_summary_metrics_op = None
@@ -56,10 +57,12 @@ class Graph(object):
         self.iterator = None
         self.tower_losses = None
         self.tower_accuracies = None
+        self.tower_f1 = None
         self.tower_gradients = None
         self.tower_waveforms = None
         self.tower_labels = None
         self.tower_logits = None
+        self.tower_cam = None
 
         # Build computational graph
         self.build_graph()
@@ -111,7 +114,6 @@ class Graph(object):
 
             """Summaries"""
             # Merge training summaries
-            self.train_summary_all_op = tf.summary.merge_all('train_all')
             self.train_summary_metrics_op = tf.summary.merge_all('train_metrics')
 
             """Initialize Variables"""
@@ -154,10 +156,12 @@ class Graph(object):
         # Initialize tower lists
         self.tower_losses = list()
         self.tower_accuracies = list()
+        self.tower_f1 = list()
         self.tower_gradients = list()
         self.tower_waveforms = list()
         self.tower_labels = list()
         self.tower_logits = list()
+        self.tower_cams = list()
 
         # Loop through GPUs and build forward graph for each one
         for tower_id in range(self.gpu_count):
@@ -168,9 +172,9 @@ class Graph(object):
                     waveforms, labels = self._get_next_batch()
 
                     # Compute inference
-                    logits, _ = self.network.inference(input_layer=waveforms, reuse=tf.AUTO_REUSE,
-                                                       is_training=self.is_training, name='ECGNet',
-                                                       print_shape=False)
+                    logits, _, cams = self.network.inference(input_layer=waveforms, reuse=tf.AUTO_REUSE,
+                                                             is_training=self.is_training, name='ECGNet',
+                                                             print_shape=True)
 
                     # Compute loss
                     loss = self._compute_loss(logits=logits, labels=labels)
@@ -178,14 +182,20 @@ class Graph(object):
                     # Compute accuracy
                     accuracy = self._compute_accuracy(logits=logits, labels=labels)
 
+                    # Compute f1
+                    f1 = self._compute_f1(logits=logits, labels=labels)
+
                     # Compute gradients
                     gradients = self._compute_gradients(optimizer=self.optimizer, loss=loss)
 
                     # Append losses
                     self.tower_losses.append(loss)
 
-                    # Append gradients
+                    # Append accuracy
                     self.tower_accuracies.append(accuracy)
+
+                    # Append f1
+                    self.tower_f1.append(f1)
 
                     # Append gradients
                     self.tower_gradients.append(gradients)
@@ -194,6 +204,7 @@ class Graph(object):
                     self.tower_waveforms.append(waveforms)
                     self.tower_labels.append(labels)
                     self.tower_logits.append(logits)
+                    self.tower_cams.append(cams)
 
                     # Trigger batch_norm moving mean and variance update operation
                     if tower_id == 0:
@@ -202,6 +213,7 @@ class Graph(object):
         # Merge towers
         self.loss = self._compute_mean_loss(tower_losses=self.tower_losses)
         self.accuracy = self._compute_mean_accuracy(tower_accuracies=self.tower_accuracies)
+        self.f1 = self._compute_mean_f1(tower_f1=self.tower_f1)
         self.gradients = self._compute_mean_gradients(tower_gradients=self.tower_gradients)
         self._group_data()
 
@@ -214,8 +226,9 @@ class Graph(object):
 
     def _compute_metrics(self):
         """Collect loss metric."""
-        with tf.variable_scope('train_metrics'):
+        with tf.variable_scope('metrics'):
             metrics = {'accuracy': tf.metrics.mean(values=self.accuracy),
+                       'f1': tf.metrics.mean(values=self.f1),
                        'loss': tf.metrics.mean(values=self.loss)}
         return metrics
 
@@ -291,16 +304,15 @@ class Graph(object):
     def _compute_loss(logits, labels):
         """Computes the mean squared error for a given set of logits and labels."""
         with tf.variable_scope('loss'):
-            # Specify class weightings {'N': 0.5416995, 'A': 3.62752858, 'O': 1.13857833, '~': 5.0}
-            # class_weights = tf.constant([0.5416995, 3.62752858, 1.13857833, 5.0])
+            # Specify class weightings {'N': 0.42001576, 'A': 2.81266491, 'O': 0.88281573, '~': 7.64157706}
+            class_weights = tf.constant([0.42001576, 2.81266491, 0.88281573, 1.0])
 
             # Specify the weights for each sample in the batch
-            # weights = tf.reduce_sum(class_weights * tf.cast(labels, tf.int32), axis=1)
-            # weights = tf.gather(params=class_weights, indices=tf.cast(labels, tf.int32))
+            weights = tf.gather(params=class_weights, indices=tf.cast(labels, tf.int32))
 
             # compute the loss
             losses = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=tf.cast(labels, tf.int32))
-
+            
             # Compute mean loss
             loss = tf.reduce_mean(losses)
 
@@ -309,10 +321,16 @@ class Graph(object):
     def _compute_accuracy(self, logits, labels):
         """Computes the accuracy set of logits and labels."""
         with tf.variable_scope('accuracy'):
-            # Compute accuracy
             accuracy = self.network.compute_accuracy(logits=logits, labels=labels)
 
         return accuracy
+
+    def _compute_f1(self, logits, labels):
+        """Computes the f1 score set of logits and labels."""
+        with tf.variable_scope('f1'):
+            f1 = self.network.compute_f1(logits=logits, labels=labels)
+
+        return f1
 
     @staticmethod
     def _compute_gradients(optimizer, loss):
@@ -334,6 +352,10 @@ class Graph(object):
         """Compute mean loss across towers."""
         with tf.variable_scope('loss'):
             loss = tf.reduce_mean(tower_losses)
+
+        # Get summary
+        tf.summary.scalar(name='loss/loss', tensor=loss, collections=['train_metrics'])
+
         return loss
 
     @staticmethod
@@ -341,7 +363,22 @@ class Graph(object):
         """Compute mean accuracy across towers."""
         with tf.variable_scope('accuracy'):
             accuracy = tf.reduce_mean(tower_accuracies)
+
+        # Get summary
+        tf.summary.scalar(name='accuracy/accuracy', tensor=accuracy, collections=['train_metrics'])
+
         return accuracy
+
+    @staticmethod
+    def _compute_mean_f1(tower_f1):
+        """Compute mean f1 score across towers."""
+        with tf.variable_scope('f1'):
+            f1 = tf.reduce_mean(tower_f1)
+
+        # Get summary
+        tf.summary.scalar(name='f1/f1', tensor=f1, collections=['train_metrics'])
+
+        return f1
 
     @staticmethod
     def _compute_mean_gradients(tower_gradients):

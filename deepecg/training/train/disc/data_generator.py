@@ -37,8 +37,10 @@ class DataGenerator(object):
         self.current_seed = 0
 
         # Get lambda functions
-        self.import_waveforms_fn = lambda file_path, label: self._import_waveforms(file_path=file_path, label=label)
-
+        self.import_waveforms_fn_train = lambda file_path, label: self._import_waveform(file_path=file_path,
+                                                                                        label=label, augment=True)
+        self.import_waveforms_fn_val = lambda file_path, label: self._import_waveform(file_path=file_path,
+                                                                                      label=label, augment=False)
         # Get dataset
         self.dataset = self._get_dataset()
 
@@ -60,7 +62,7 @@ class DataGenerator(object):
 
     def _get_file_names_and_labels(self):
         """Get list of waveform npy file paths and labels."""
-        # Get image file names
+        # Get waveform file names
         file_names = list(self.lookup_dict.keys())
 
         # Get labels
@@ -71,15 +73,56 @@ class DataGenerator(object):
 
         return file_names, labels
 
-    def _import_waveforms(self, file_path, label):
-        """Import waveform files from file path strings."""
+    def _import_waveform(self, file_path, label, augment):
+        """Import waveform file from file path string."""
         # Load numpy file
-        waveforms = tf.py_func(self._load_npy_file, [file_path], [tf.float32])
+        waveform = tf.py_func(self._load_npy_file, [file_path], [tf.float32])
 
         # Set tensor shape
-        waveforms = tf.reshape(tensor=waveforms, shape=self.shape)
+        waveform = tf.reshape(tensor=waveform, shape=self.shape)
 
-        return waveforms, label
+        # Augment waveform
+        if augment:
+            waveform = self._augment(waveform=waveform)
+
+        return waveform, label
+
+    def _augment(self, waveform):
+        """Apply random augmentations."""
+        # Random amplitude scale
+        waveform = self._random_scale(waveform=waveform, prob=0.5)
+
+        return waveform
+
+    def _random_scale(self, waveform, prob):
+        """Apply random multiplication factor."""
+        # Get random true or false
+        prediction = self._random_true_false(prob=prob)
+
+        # Apply random multiplication factor
+        waveform = tf.cond(prediction, lambda: self._scale(waveform=waveform),
+                           lambda: self._do_nothing(waveform=waveform))
+
+        return waveform
+
+    @staticmethod
+    def _scale(waveform):
+        """Apply random multiplication factor."""
+        # Get random scale factor
+        scale_factor = tf.random_uniform(shape=[], minval=0.5, maxval=2.5, dtype=tf.float32)
+
+        return waveform * scale_factor
+
+    @staticmethod
+    def _do_nothing(waveform):
+        return waveform
+
+    @staticmethod
+    def _random_true_false(prob):
+        """Get a random true or false."""
+        # Get random probability between 0 and 1
+        probability = tf.random_uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+        return tf.less(x=probability, y=prob)
 
     def _get_dataset(self):
         """Retrieve tensorflow Dataset object."""
@@ -90,7 +133,7 @@ class DataGenerator(object):
                              tf.reshape(tensor=tf.constant(self.labels), shape=[-1]))
                 )
                 .shuffle(buffer_size=self.num_samples, reshuffle_each_iteration=True)
-                .map(map_func=self.import_waveforms_fn, num_parallel_calls=self.num_parallel_calls)
+                .map(map_func=self.import_waveforms_fn_train, num_parallel_calls=self.num_parallel_calls)
                 .repeat()
                 .batch(batch_size=self.batch_size)
                 .prefetch(buffer_size=self.prefetch_buffer)
@@ -101,7 +144,7 @@ class DataGenerator(object):
                     tensors=(tf.constant(value=self.file_paths),
                              tf.reshape(tensor=tf.constant(self.labels), shape=[-1]))
                 )
-                .map(map_func=self.import_waveforms_fn, num_parallel_calls=self.num_parallel_calls)
+                .map(map_func=self.import_waveforms_fn_val, num_parallel_calls=self.num_parallel_calls)
                 .repeat()
                 .batch(batch_size=self.batch_size)
                 .prefetch(buffer_size=self.prefetch_buffer)

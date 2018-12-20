@@ -13,6 +13,7 @@ import time
 import numpy as np
 import tensorflow as tf
 from datetime import datetime
+from sklearn.metrics import f1_score
 
 
 class State(object):
@@ -32,6 +33,8 @@ class State(object):
         self.val_loss = None
         self.train_accuracy = None
         self.val_accuracy = None
+        self.train_f1 = None
+        self.val_f1 = None
         self.time = time.time()
         self.global_step = self._get_global_step()
         self.datetime = str(datetime.utcnow())
@@ -47,10 +50,10 @@ class State(object):
     def _compute_metrics(self):
 
         # Training metrics
-        self.train_loss, self.train_accuracy = self._compute_train_metrics()
+        self.train_loss, self.train_accuracy, self.train_f1 = self._compute_train_metrics()
 
         # Validation metrics
-        self.val_loss, self.val_accuracy = self._compute_val_metrics()
+        self.val_loss, self.val_accuracy, self.val_f1 = self._compute_val_metrics()
 
     def _get_num_train_batches(self):
         """Number of batches for training Dataset."""
@@ -73,7 +76,7 @@ class State(object):
             metrics_op = {key: val[0] for key, val in self.graph.metrics.items()}
             metrics = self.sess.run(metrics_op)
 
-            return metrics['loss'], metrics['accuracy']
+            return metrics['loss'], metrics['accuracy'], metrics['f1']
 
         else:
             # Get train handle
@@ -98,7 +101,7 @@ class State(object):
             metrics_op = {key: val[0] for key, val in self.graph.metrics.items()}
             metrics = self.sess.run(metrics_op)
 
-            return metrics['loss'], metrics['accuracy']
+            return metrics['loss'], metrics['accuracy'], metrics['f1']
 
     def _compute_val_metrics(self):
         """Get validation metrics."""
@@ -112,16 +115,33 @@ class State(object):
         # Initialize metrics
         self.sess.run(fetches=[self.graph.init_metrics_op])
 
+        # Empty lists for logits and labels
+        logits_all = list()
+        labels_all = list()
+
         # Loop through val batches
         for batch in range(self.val_steps_per_epoch):
 
             # Run metric update operation
-            self.sess.run(fetches=[self.graph.update_metrics_op],
-                          feed_dict={self.graph.batch_size: self.batch_size, self.graph.is_training: False,
-                                     self.graph.mode_handle: handle_val})
+            logits, labels, cam, _ = self.sess.run(fetches=[self.graph.logits, self.graph.labels,
+                                                            self.graph.tower_cams, self.graph.update_metrics_op],
+                                                   feed_dict={self.graph.batch_size: self.batch_size,
+                                                              self.graph.is_training: False,
+                                                              self.graph.mode_handle: handle_val})
+
+            # Get logits and labels
+            logits_all.append(logits)
+            labels_all.append(labels)
+
+        # Group logits and labels
+        logits_all = np.concatenate(logits_all, axis=0)
+        labels_all = np.concatenate(labels_all, axis=0)
+
+        # Compute f1 score
+        f1 = np.mean(f1_score(labels_all, np.argmax(logits_all, axis=1), labels=[0, 1, 2, 3], average=None)[0:3])
 
         # Get metrics
         metrics_op = {key: val[0] for key, val in self.graph.metrics.items()}
         metrics = self.sess.run(metrics_op)
 
-        return metrics['loss'], metrics['accuracy']
+        return metrics['loss'], metrics['accuracy'], f1

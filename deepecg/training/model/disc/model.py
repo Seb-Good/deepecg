@@ -18,6 +18,12 @@ import tensorflow as tf
 # Local imports
 from deepecg.training.model.disc.graph import Graph
 from deepecg.training.networks.deep_ecg_v1 import DeepECGV1
+from deepecg.training.networks.deep_ecg_v2 import DeepECGV2
+from deepecg.training.networks.deep_ecg_v3 import DeepECGV3
+from deepecg.training.networks.deep_ecg_v4 import DeepECGV4
+from deepecg.training.networks.deep_ecg_v5 import DeepECGV5
+from deepecg.training.networks.deep_ecg_v6 import DeepECGV6
+from deepecg.training.networks.deep_ecg_v7 import DeepECGV7
 
 
 class Model(object):
