@@ -92,6 +92,9 @@ class DataGenerator(object):
         # Random amplitude scale
         waveform = self._random_scale(waveform=waveform, prob=0.5)
 
+        # Random polarity flip
+        waveform = self._random_polarity(waveform=waveform, prob=0.5)
+
         return waveform
 
     def _random_scale(self, waveform, prob):
@@ -112,6 +115,22 @@ class DataGenerator(object):
         scale_factor = tf.random_uniform(shape=[], minval=0.5, maxval=2.5, dtype=tf.float32)
 
         return waveform * scale_factor
+
+    def _random_polarity(self, waveform, prob):
+        """Apply random polarity flip."""
+        # Get random true or false
+        prediction = self._random_true_false(prob=prob)
+
+        # Apply random polarity flip
+        waveform = tf.cond(prediction, lambda: self._polarity(waveform=waveform),
+                           lambda: self._do_nothing(waveform=waveform))
+
+        return waveform
+
+    @staticmethod
+    def _polarity(waveform):
+        """Apply random polarity flip."""
+        return waveform * -1
 
     @staticmethod
     def _do_nothing(waveform):

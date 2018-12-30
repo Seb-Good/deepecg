@@ -46,9 +46,9 @@ class DeepECGV7(object):
         with tf.variable_scope(name, reuse=reuse):
 
             # Set variables
-            kernel_size = 2
+            kernel_size = 3
             conv_filts = 128
-            res_filts = 32
+            res_filts = 128
             skip_filts = 128
             skips = list()
 
@@ -65,193 +65,186 @@ class DeepECGV7(object):
             with tf.variable_scope(layer_name):
 
                 # Convolution
-                res = conv_layer(input_layer=input_layer, kernel_size=kernel_size, strides=1, dilation_rate=1,
+                net = conv_layer(input_layer=input_layer, kernel_size=kernel_size, strides=1, dilation_rate=1,
                                  filters=res_filts, padding='SAME', activation=None, use_bias=False,
                                  name=layer_name + '_conv', seed=self.seed)
 
             # Print shape
-            print_output_shape(layer_name=layer_name, net=res, print_shape=print_shape)
+            print_output_shape(layer_name=layer_name, net=net, print_shape=print_shape)
 
-            # # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
-            #
-            # # Set name
-            # layer_name = 'layer_2'
-            #
-            # # Compute block
-            # res, skip = self._residual_block(input_layer=res, kernel_size=kernel_size, layer_name=layer_name,
-            #                                  conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
-            #                                  dilation_rate=2)
-            #
-            # # Collect skip
-            # skips.append(skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name=layer_name + '_res', net=res, print_shape=print_shape)
-            # print_output_shape(layer_name=layer_name + '_skip', net=skip, print_shape=print_shape)
-            #
-            # # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
-            #
-            # # Set name
-            # layer_name = 'layer_3'
-            #
-            # # Compute block
-            # res, skip = self._residual_block(input_layer=res, kernel_size=kernel_size, layer_name=layer_name,
-            #                                  conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
-            #                                  dilation_rate=4)
-            #
-            # # Collect skip
-            # skips.append(skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name=layer_name + '_res', net=res, print_shape=print_shape)
-            # print_output_shape(layer_name=layer_name + '_skip', net=skip, print_shape=print_shape)
-            #
-            # # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
-            #
-            # # Set name
-            # layer_name = 'layer_4'
-            #
-            # # Compute block
-            # res, skip = self._residual_block(input_layer=res, kernel_size=kernel_size, layer_name=layer_name,
-            #                                  conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
-            #                                  dilation_rate=8)
-            #
-            # # Collect skip
-            # skips.append(skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name=layer_name + '_res', net=res, print_shape=print_shape)
-            # print_output_shape(layer_name=layer_name + '_skip', net=skip, print_shape=print_shape)
-            #
-            # # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
-            #
-            # # Set name
-            # layer_name = 'layer_5'
-            #
-            # # Compute block
-            # res, skip = self._residual_block(input_layer=res, kernel_size=kernel_size, layer_name=layer_name,
-            #                                  conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
-            #                                  dilation_rate=16)
-            #
-            # # Collect skip
-            # skips.append(skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name=layer_name + '_res', net=res, print_shape=print_shape)
-            # print_output_shape(layer_name=layer_name + '_skip', net=skip, print_shape=print_shape)
-            #
-            # # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
-            #
-            # # Set name
-            # layer_name = 'layer_6'
-            #
-            # # Compute block
-            # res, skip = self._residual_block(input_layer=res, kernel_size=kernel_size, layer_name=layer_name,
-            #                                  conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
-            #                                  dilation_rate=32)
-            #
-            # # Collect skip
-            # skips.append(skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name=layer_name + '_res', net=res, print_shape=print_shape)
-            # print_output_shape(layer_name=layer_name + '_skip', net=skip, print_shape=print_shape)
-            #
-            # # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
-            #
-            # # Set name
-            # layer_name = 'layer_7'
-            #
-            # # Compute block
-            # res, skip = self._residual_block(input_layer=res, kernel_size=kernel_size, layer_name=layer_name,
-            #                                  conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
-            #                                  dilation_rate=64)
-            #
-            # # Collect skip
-            # skips.append(skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name=layer_name + '_res', net=res, print_shape=print_shape)
-            # print_output_shape(layer_name=layer_name + '_skip', net=skip, print_shape=print_shape)
-            #
-            # # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
-            #
-            # # Set name
-            # layer_name = 'layer_8'
-            #
-            # # Compute block
-            # res, skip = self._residual_block(input_layer=res, kernel_size=kernel_size, layer_name=layer_name,
-            #                                  conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
-            #                                  dilation_rate=128)
-            #
-            # # Collect skip
-            # skips.append(skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name=layer_name + '_res', net=res, print_shape=print_shape)
-            # print_output_shape(layer_name=layer_name + '_skip', net=skip, print_shape=print_shape)
-            #
-            # # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
-            #
-            # # Set name
-            # layer_name = 'layer_9'
-            #
-            # # Compute block
-            # res, skip = self._residual_block(input_layer=res, kernel_size=kernel_size, layer_name=layer_name,
-            #                                  conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
-            #                                  dilation_rate=256)
-            #
-            # # Collect skip
-            # skips.append(skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name=layer_name + '_res', net=res, print_shape=print_shape)
-            # print_output_shape(layer_name=layer_name + '_skip', net=skip, print_shape=print_shape)
-            #
-            # # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
-            #
-            # # Set name
-            # layer_name = 'layer_10'
-            #
-            # # Compute block
-            # res, skip = self._residual_block(input_layer=res, kernel_size=kernel_size, layer_name=layer_name,
-            #                                  conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
-            #                                  dilation_rate=512)
-            #
-            # # Collect skip
-            # skips.append(skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name=layer_name + '_res', net=res, print_shape=print_shape)
-            # print_output_shape(layer_name=layer_name + '_skip', net=skip, print_shape=print_shape)
-            #
-            # # Add all skips to res output
-            # output = tf.zeros(shape=tf.shape(skip))
-            # for skip in skips[0:-1]:
-            #     output = tf.add(x=output, y=skip)
-            #
-            # # Print shape
-            # print_output_shape(layer_name='output_skip_addition', net=output, print_shape=print_shape)
-            #
+            # --- Layer 2 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_2'
+
+            # Compute block
+            outputs = self._residual_block(input_layer=net, kernel_size=kernel_size, layer_name=layer_name,
+                                           conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
+                                           dilation_rate=2, res=True, skip=True)
+
+            # Collect skip
+            skips.append(outputs['skip'])
+
+            # Print shape
+            print_output_shape(layer_name=layer_name + '_res', net=outputs['res'], print_shape=print_shape)
+            print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
+
+            # --- Layer 3 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_3'
+
+            # Compute block
+            outputs = self._residual_block(input_layer=outputs['res'], kernel_size=kernel_size, layer_name=layer_name,
+                                           conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
+                                           dilation_rate=4, res=True, skip=True)
+
+            # Collect skip
+            skips.append(outputs['skip'])
+
+            # Print shape
+            print_output_shape(layer_name=layer_name + '_res', net=outputs['res'], print_shape=print_shape)
+            print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
+
+            # --- Layer 4 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_4'
+
+            # Compute block
+            outputs = self._residual_block(input_layer=outputs['res'], kernel_size=kernel_size, layer_name=layer_name,
+                                           conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
+                                           dilation_rate=8, res=True, skip=True)
+
+            # Collect skip
+            skips.append(outputs['skip'])
+
+            # Print shape
+            print_output_shape(layer_name=layer_name + '_res', net=outputs['res'], print_shape=print_shape)
+            print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
+
+            # --- Layer 5 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_5'
+
+            # Compute block
+            outputs = self._residual_block(input_layer=outputs['res'], kernel_size=kernel_size, layer_name=layer_name,
+                                           conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
+                                           dilation_rate=16, res=True, skip=True)
+
+            # Collect skip
+            skips.append(outputs['skip'])
+
+            # Print shape
+            print_output_shape(layer_name=layer_name + '_res', net=outputs['res'], print_shape=print_shape)
+            print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
+
+            # --- Layer 6 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_6'
+
+            # Compute block
+            outputs = self._residual_block(input_layer=outputs['res'], kernel_size=kernel_size, layer_name=layer_name,
+                                           conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
+                                           dilation_rate=32, res=True, skip=True)
+
+            # Collect skip
+            skips.append(outputs['skip'])
+
+            # Print shape
+            print_output_shape(layer_name=layer_name + '_res', net=outputs['res'], print_shape=print_shape)
+            print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
+
+            # --- Layer 7 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_7'
+
+            # Compute block
+            outputs = self._residual_block(input_layer=outputs['res'], kernel_size=kernel_size, layer_name=layer_name,
+                                           conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
+                                           dilation_rate=64, res=True, skip=True)
+
+            # Collect skip
+            skips.append(outputs['skip'])
+
+            # Print shape
+            print_output_shape(layer_name=layer_name + '_res', net=outputs['res'], print_shape=print_shape)
+            print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
+
+            # --- Layer 8 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_8'
+
+            # Compute block
+            outputs = self._residual_block(input_layer=outputs['res'], kernel_size=kernel_size, layer_name=layer_name,
+                                           conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
+                                           dilation_rate=128, res=True, skip=True)
+
+            # Collect skip
+            skips.append(outputs['skip'])
+
+            # Print shape
+            print_output_shape(layer_name=layer_name + '_res', net=outputs['res'], print_shape=print_shape)
+            print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
+
+            # --- Layer 9 (Convolution) ------------------------------------------------------------------------------ #
+
+            # Set name
+            layer_name = 'layer_9'
+
+            # Compute block
+            outputs = self._residual_block(input_layer=outputs['res'], kernel_size=kernel_size, layer_name=layer_name,
+                                           conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
+                                           dilation_rate=256, res=True, skip=True)
+
+            # Collect skip
+            skips.append(outputs['skip'])
+
+            # Print shape
+            print_output_shape(layer_name=layer_name + '_res', net=outputs['res'], print_shape=print_shape)
+            print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
+
+            # --- Layer 10 (Convolution) ----------------------------------------------------------------------------- #
+
+            # Set name
+            layer_name = 'layer_10'
+
+            # Compute block
+            outputs = self._residual_block(input_layer=outputs['res'], kernel_size=kernel_size, layer_name=layer_name,
+                                           conv_filts=conv_filts, res_filts=res_filts, skip_filts=skip_filts,
+                                           dilation_rate=512, res=False, skip=True)
+
+            # Collect skip
+            skips.append(outputs['skip'])
+
+            # Print shape
+            print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
+
+            # Add all skips to res output
+            output = tf.add_n(inputs=skips, name='add_skips')
+
+            # Print shape
+            print_output_shape(layer_name='output_skip_addition', net=output, print_shape=print_shape)
+
             # Activation
-            with tf.variable_scope('relu1') as scope:
-                output = tf.nn.relu(res, name=scope.name)
+            with tf.variable_scope('relu') as scope:
+                output = tf.nn.relu(output, name=scope.name)
 
             # Convolution
-            output = conv_layer(input_layer=output, kernel_size=1, strides=1, dilation_rate=1,
-                                filters=256, padding='SAME', activation=None, use_bias=False,
+            output = conv_layer(input_layer=output, kernel_size=3, strides=1, dilation_rate=1,
+                                filters=256, padding='SAME', activation=tf.nn.relu, use_bias=False,
                                 name='conv1', seed=self.seed)
 
             # Print shape
             print_output_shape(layer_name='output_conv1', net=output, print_shape=print_shape)
 
-            # Activation
-            with tf.variable_scope('relu2') as scope:
-                output = tf.nn.relu(output, name=scope.name)
-
             # Convolution
-            output = conv_layer(input_layer=output, kernel_size=1, strides=1, dilation_rate=1,
-                                filters=512, padding='SAME', activation=None, use_bias=False,
+            output = conv_layer(input_layer=output, kernel_size=3, strides=1, dilation_rate=1,
+                                filters=512, padding='SAME', activation=tf.nn.relu, use_bias=False,
                                 name='conv2', seed=self.seed)
 
             # Print shape
@@ -265,6 +258,7 @@ class DeepECGV7(object):
 
             # Set layer scope
             with tf.variable_scope(layer_name):
+
                 # Reduce mean along dimension 1
                 gap = tf.reduce_mean(input_tensor=output, axis=1)
 
@@ -284,52 +278,55 @@ class DeepECGV7(object):
             print_output_shape(layer_name=layer_name, net=logits, print_shape=print_shape)
 
             # Compute Class Activation Maps
-            # cams = self._get_cams(net=res, is_training=is_training)
+            # cams = self._get_cams(net=output, is_training=is_training)
 
         return logits, [], []
 
-    def _residual_block(self, input_layer, kernel_size, layer_name, conv_filts, res_filts, skip_filts, dilation_rate):
+    def _residual_block(self, input_layer, kernel_size, layer_name, conv_filts, res_filts,
+                        skip_filts, dilation_rate, res=True, skip=True):
         """Wavenet residual block."""
-
         # Set layer scope
         with tf.variable_scope(layer_name):
 
-            # Set identity
-            identity = tf.identity(input=input_layer, name=layer_name + '_identity')
+            # Outputs dictionary
+            outputs = dict()
 
-            # Convolution
-            tanh = conv_layer(input_layer=input_layer, kernel_size=kernel_size, strides=1,
-                              dilation_rate=dilation_rate, filters=conv_filts, padding='SAME', activation=None,
-                              use_bias=False, name=layer_name + '_conv_tanh', seed=self.seed)
+            # Convolution tanh
+            conv_filt = conv_layer(input_layer=input_layer, kernel_size=kernel_size, strides=1,
+                                   dilation_rate=dilation_rate, filters=conv_filts, padding='SAME',
+                                   activation=tf.nn.tanh, use_bias=False, name=layer_name + '_conv_filt',
+                                   seed=self.seed)
 
-            # Tanh activation
-            tanh = tf.nn.tanh(tanh, name='tanh')
-
-            # Convolution
-            sigmoid = conv_layer(input_layer=input_layer, kernel_size=kernel_size, strides=1,
-                                 dilation_rate=dilation_rate, filters=conv_filts, padding='SAME', activation=None,
-                                 use_bias=False, name=layer_name + '_conv_sigmoid', seed=self.seed)
-
-            # Sigmoid activation
-            sigmoid = tf.nn.sigmoid(sigmoid, name='sigmoid')
+            # Convolution sigmoid
+            conv_gate = conv_layer(input_layer=input_layer, kernel_size=kernel_size, strides=1,
+                                   dilation_rate=dilation_rate, filters=conv_filts, padding='SAME',
+                                   activation=tf.nn.sigmoid, use_bias=False, name=layer_name + '_conv_gate',
+                                   seed=self.seed)
 
             # Combine activations
-            activation = tf.multiply(tanh, sigmoid, name='gate_activation')
+            with tf.variable_scope('gate') as scope:
+                activation = tf.multiply(conv_filt, conv_gate, name=scope.name)
 
-            # Residual Convolution
-            res_out = conv_layer(input_layer=activation, kernel_size=1, strides=1, dilation_rate=dilation_rate,
-                                 filters=res_filts, padding='SAME', activation=None, use_bias=False,
-                                 name=layer_name + '_conv_res', seed=self.seed)
+            # Residual
+            if res:
+                # Convolution
+                outputs['res'] = conv_layer(input_layer=activation, kernel_size=1, strides=1,
+                                            dilation_rate=dilation_rate,  filters=res_filts, padding='SAME',
+                                            activation=None, use_bias=False, name=layer_name + '_conv_res',
+                                            seed=self.seed)
 
-            # Add identity
-            res_out = tf.add(res_out, identity, name=layer_name + '_add_identity')
+                # Add identity
+                outputs['res'] = tf.add(outputs['res'], input_layer, name=layer_name + '_add_identity')
 
-            # Skip Convolution
-            skip_out = conv_layer(input_layer=activation, kernel_size=1, strides=1, dilation_rate=dilation_rate,
-                                  filters=skip_filts, padding='SAME', activation=None, use_bias=False,
-                                  name=layer_name + '_conv_skip', seed=self.seed)
+            # Skip
+            if skip:
+                # Convolution
+                outputs['skip'] = conv_layer(input_layer=activation, kernel_size=1, strides=1,
+                                             dilation_rate=dilation_rate, filters=skip_filts, padding='SAME',
+                                             activation=None, use_bias=False, name=layer_name + '_conv_skip',
+                                             seed=self.seed)
 
-            return res_out, skip_out
+        return outputs
 
     def _get_cams(self, net, is_training):
         """Collect class activation maps (CAMs)."""
