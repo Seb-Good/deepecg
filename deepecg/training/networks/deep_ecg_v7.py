@@ -46,7 +46,7 @@ class DeepECGV7(object):
         with tf.variable_scope(name, reuse=reuse):
 
             # Set variables
-            kernel_size = 3
+            kernel_size = 5
             conv_filts = 128
             res_filts = 128
             skip_filts = 128
@@ -235,7 +235,7 @@ class DeepECGV7(object):
                 output = tf.nn.relu(output, name=scope.name)
 
             # Convolution
-            output = conv_layer(input_layer=output, kernel_size=3, strides=1, dilation_rate=1,
+            output = conv_layer(input_layer=output, kernel_size=kernel_size, strides=1, dilation_rate=1,
                                 filters=256, padding='SAME', activation=tf.nn.relu, use_bias=False,
                                 name='conv1', seed=self.seed)
 
@@ -243,7 +243,7 @@ class DeepECGV7(object):
             print_output_shape(layer_name='output_conv1', net=output, print_shape=print_shape)
 
             # Convolution
-            output = conv_layer(input_layer=output, kernel_size=3, strides=1, dilation_rate=1,
+            output = conv_layer(input_layer=output, kernel_size=kernel_size, strides=1, dilation_rate=1,
                                 filters=512, padding='SAME', activation=tf.nn.relu, use_bias=False,
                                 name='conv2', seed=self.seed)
 
@@ -406,4 +406,3 @@ class DeepECGV7(object):
     def _compute_f1(predictions, labels):
         """Compute the mean f1 score."""
         return np.mean(f1_score(labels, predictions, labels=[0, 1, 2, 3], average=None)[0:3])
-

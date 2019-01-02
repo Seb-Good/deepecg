@@ -53,7 +53,13 @@ class TrainingDB(object):
 
     def _load_labels(self):
         """Load CSV of rhythm labels."""
-        return pd.read_csv(os.path.join(self.path_labels, 'labels.csv'))
+        # Load csv as DataFrame
+        labels = pd.read_csv(os.path.join(self.path_labels, 'labels.csv'))
+
+        # Select classes
+        labels = labels[labels['label'].isin(self.classes)]
+
+        return labels
 
     def _split_dataset(self):
         """Split dataset into train, val, and test segments."""
@@ -92,7 +98,7 @@ class TrainingDB(object):
         return np.load(os.path.join(self.path_waveforms, file_name))
 
     def _load_mat_file(self, file_name):
-        """Load Matlab (.mat) file."""
+        """Load Matlab (.waveforms) file."""
         return sio.loadmat(os.path.join(self.path_waveforms, file_name))['val'][0]
 
     def _process_waveform(self, idx):
@@ -105,7 +111,7 @@ class TrainingDB(object):
 
         # Load  and process ECG waveform
         ecg = ECG(file_name=self.labels.loc[idx, 'file_name'], label=self.labels.loc[idx, 'label'],
-                  waveform=self._load_mat_file(file_name=os.path.join(self.path_waveforms, file_name + '.mat')),
+                  waveform=self._load_mat_file(file_name=os.path.join(self.path_waveforms, file_name + '.waveforms')),
                   filter_bands=[3, 45], fs=self.fs)
 
         # Set waveform duration

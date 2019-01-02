@@ -308,7 +308,7 @@ class Graph(object):
             class_weights = tf.constant([0.42001576, 2.81266491, 0.88281573, 1.0])
 
             # Specify the weights for each sample in the batch
-            weights = tf.gather(params=class_weights, indices=tf.cast(labels, tf.int32))
+            # weights = tf.gather(params=class_weights, indices=tf.cast(labels, tf.int32))
 
             # compute the loss
             losses = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=tf.cast(labels, tf.int32))

@@ -44,7 +44,7 @@ class WaveformDB(object):
         self.waveforms = self._unpickle()
 
     def build_database(self):
-        """Build a database from a folder of .mat files."""
+        """Build a database from a folder of .waveforms files."""
         # Initialize waveforms dictionary
         self.waveforms = dict()
 
@@ -70,8 +70,8 @@ class WaveformDB(object):
         return pd.read_csv(os.path.join(self.path_labels, 'labels.csv'))
 
     def _load_mat_file(self, file_name):
-        """Load Matlab (.mat) file."""
-        return sio.loadmat(os.path.join(self.path_waveforms, 'mat', file_name))['val'][0] / 1000.
+        """Load Matlab (.waveforms) file."""
+        return sio.loadmat(os.path.join(self.path_waveforms, 'waveforms', file_name))['val'][0] / 1000.
 
     def _pickle(self, variable, file_name):
         """Pickle database."""
