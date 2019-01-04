@@ -7,3 +7,4 @@ scikit-learn==0.19.1
 tensorflow==1.8.0
 biosppy==0.6.1
 joblib==0.9.4
+wfdb==2.2.1
