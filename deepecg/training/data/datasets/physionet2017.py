@@ -1,7 +1,7 @@
 """
 physionet2017.py
----------------
-This module provides classes and functions for creating a training dataset that is loaded directly from disc.
+----------------
+This module provides classes and methods for creating the Physionet 2017 database.
 By: Sebastian D. Goodfellow, Ph.D., 2018
 """
 
@@ -13,6 +13,9 @@ import os
 import shutil
 import urllib
 import zipfile
+import numpy as np
+import pandas as pd
+import scipy.io as sio
 
 # Local imports
 from deepecg.config.config import DATA_DIR
@@ -30,11 +33,17 @@ class Physionet2017DB(object):
         self.zip_file_path = os.path.join(self.raw_path, self.db_name + '.zip')
         self.extract_path = os.path.join(self.raw_path, 'training2017')
 
-        # Generate the raw
-        self._generate_raw_db()
+    def generate_db(self):
+        """Generate raw and processed databases."""
+        # Generate raw database
+        self.generate_raw_db()
 
-    def _generate_raw_db(self):
+        # Generate processed database
+        self.generate_processed_db()
+
+    def generate_raw_db(self):
         """Generate the raw version of the Physionet2017 database in the 'raw' folder."""
+        print('Generating Raw Physionet2017 Database ...')
         # Download the database
         self._download_db()
 
@@ -43,21 +52,59 @@ class Physionet2017DB(object):
 
         # Restructure folder
         self._restructure()
+        print('Complete!\n')
+
+    def generate_processed_db(self):
+        """Generate the processed version of the Physionet2017 database in the 'processed' folder."""
+        print('Generating Processed Physionet2017 Database ...')
+        # Load labels
+        labels = self._load_labels()
+
+        # Add database columns
+        labels['db'] = self.db_name
+        labels['path'] = np.nan
+
+        # Loop through files
+        for idx, row in labels.iterrows():
+
+            # Load mat file
+            waveform = self._load_mat_file(file_name=labels.loc[idx, 'file_name'] + '.mat')
+
+            # Save path
+            save_path = os.path.join(self.processed_path, 'waveforms', labels.loc[idx, 'file_name'] + '.npy')
+
+            # Save waveform as npy file
+            np.save(save_path, waveform)
+
+            # Add full processed path
+            labels.loc[idx, 'path'] = save_path
+
+        # Save labels
+        labels.to_csv(os.path.join(self.processed_path, 'labels', 'labels.csv'), index=False)
+        print('Complete!\n')
+
+    def _load_mat_file(self, file_name):
+        """Load Matlab waveform file."""
+        return sio.loadmat(os.path.join(self.raw_path, file_name))['val'][0]
+
+    def _load_labels(self):
+        """Load CSV of rhythm labels."""
+        return pd.read_csv(os.path.join(self.raw_path, 'REFERENCE.csv'), names=['file_name', 'label'])
 
     def _download_db(self):
         """Download Physionet2017 database as zip file."""
-        print('Downloading {}.'.format(self.db_url))
+        print('Downloading {} ...'.format(self.db_url))
         urllib.request.urlretrieve(self.db_url, self.zip_file_path)
 
     def _unzip_db(self):
         """Unzip the raw db zip file."""
-        print('Unzipping database.')
+        print('Unzipping database ...')
         with zipfile.ZipFile(self.zip_file_path, 'r') as zip_ref:
             zip_ref.extractall(self.raw_path)
 
     def _restructure(self):
         """Restructure folders and files."""
-        print('Restructuring folders and files.')
+        print('Restructuring folders and files ...')
         # Get list of file names
         file_names = os.listdir(self.extract_path)
 
