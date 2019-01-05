@@ -21,6 +21,11 @@ from deepecg.config.config import DATA_DIR
 
 class AFDB(object):
 
+    """
+    The MIT-BIH Atrial Fibrillation Database
+    https://physionet.org/physiobank/database/afdb/
+    """
+
     def __init__(self):
 
         # Set attributes

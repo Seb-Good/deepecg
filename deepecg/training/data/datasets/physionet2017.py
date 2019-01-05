@@ -23,6 +23,11 @@ from deepecg.config.config import DATA_DIR
 
 class Physionet2017DB(object):
 
+    """
+    AF Classification from a short single lead ECG recording: the PhysioNet/Computing in Cardiology Challenge 2017
+    https://physionet.org/challenge/2017/
+    """
+
     def __init__(self):
 
         # Set attributes
