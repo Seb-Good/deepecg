@@ -33,8 +33,8 @@ class Physionet2017DB(object):
         # Set attributes
         self.db_url = 'https://physionet.org/challenge/2017/training2017.zip'
         self.db_name = 'physionet2017'
-        self.raw_path = os.path.join(DATA_DIR, self.db_name, 'raw')
-        self.processed_path = os.path.join(DATA_DIR, self.db_name, 'processed')
+        self.raw_path = os.path.join(DATA_DIR, 'datasets', self.db_name, 'raw')
+        self.processed_path = os.path.join(DATA_DIR, 'datasets', self.db_name, 'processed')
         self.zip_file_path = os.path.join(self.raw_path, self.db_name + '.zip')
         self.extract_path = os.path.join(self.raw_path, 'training2017')
 

@@ -30,8 +30,8 @@ class AFDB(object):
 
         # Set attributes
         self.db_name = 'afdb'
-        self.raw_path = os.path.join(DATA_DIR, self.db_name, 'raw')
-        self.processed_path = os.path.join(DATA_DIR, self.db_name, 'processed')
+        self.raw_path = os.path.join(DATA_DIR, 'datasets', self.db_name, 'raw')
+        self.processed_path = os.path.join(DATA_DIR, 'datasets', self.db_name, 'processed')
         self.label_dict = {'AFIB': 'atrial fibrillation', 'AFL': 'atrial flutter', 'J': 'AV junctional rhythm'}
         self.fs = 300
         self.length = 60
@@ -124,15 +124,15 @@ class AFDB(object):
                 if any(label in val for val in list(self.label_dict.keys())):
 
                     if idx != len(labels) - 1:
-                        sections.append({'label': label, 'section': 1, 'record': record_id, 'fs': fs,
+                        sections.append({'label': label, 'section': idx, 'record': record_id, 'fs': fs, 'channel': 0,
                                          'db': self.db_name, 'waveform': waveform[sample[idx]:sample[idx + 1], 0]})
-                        sections.append({'label': label, 'section': 2, 'record': record_id, 'fs': fs,
+                        sections.append({'label': label, 'section': idx, 'record': record_id, 'fs': fs, 'channel': 1,
                                          'db': self.db_name, 'waveform': waveform[sample[idx]:sample[idx + 1], 1]})
 
                     elif idx == len(labels) - 1:
-                        sections.append({'label': label, 'section': 1, 'record': record_id, 'fs': fs,
+                        sections.append({'label': label, 'section': idx, 'record': record_id, 'fs': fs, 'channel': 0,
                                          'db': self.db_name, 'waveform': waveform[sample[idx]:, 0]})
-                        sections.append({'label': label, 'section': 2, 'record': record_id, 'fs': fs,
+                        sections.append({'label': label, 'section': idx, 'record': record_id, 'fs': fs, 'channel': 1,
                                          'db': self.db_name, 'waveform': waveform[sample[idx]:, 1]})
 
         return sections
@@ -158,7 +158,7 @@ class AFDB(object):
                 if sample_id != num_samples - 1:
                     samples.append(
                         {'label': section['label'], 'section': section['section'], 'record': section['record'],
-                         'sample': sample_id, 'fs': self.fs, 'db': section['db'],
+                         'sample': sample_id, 'fs': self.fs, 'db': section['db'], 'channel': section['channel'],
                          'waveform': self._resample_waveform(waveform=section['waveform'][idx:idx + self.length_sp],
                                                              fs=self.fs)}
                     )
@@ -167,7 +167,7 @@ class AFDB(object):
                 elif sample_id == num_samples - 1:
                     samples.append(
                         {'label': section['label'], 'section': section['section'], 'record': section['record'],
-                         'sample': sample_id, 'fs': self.fs, 'db': section['db'],
+                         'sample': sample_id, 'fs': self.fs, 'db': section['db'], 'channel': section['channel'],
                          'waveform': self._resample_waveform(waveform=section['waveform'][idx:], fs=self.fs)}
                     )
 
