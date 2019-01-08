@@ -157,7 +157,7 @@ class TrainingDB(object):
         return labels
 
     def _save_waveform(self, waveform, dataset, file_name):
-        """Save data array as .npy or .csv."""
+        """Save data array as .npy"""
         np.save(os.path.join(self.path_save, dataset, 'waveforms', file_name + '.npy'), waveform)
 
     def _set_duration(self, waveform):
