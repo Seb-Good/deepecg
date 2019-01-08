@@ -154,7 +154,7 @@ class NSRDB(object):
                     samples.append(
                         {'label': section['label'], 'section': section['section'], 'record': section['record'],
                          'sample': sample_id, 'fs': self.fs, 'db': section['db'], 'channel': section['channel'],
-                         'waveform': self._resample_waveform(waveform=section['waveform'][idx:idx + self.length_sp],
+                         'waveform': self._resample_waveform(waveform=section['waveform'][idx:idx + self.length_sp + 1],
                                                              fs=self.fs)}
                     )
                     idx += self.length_sp
