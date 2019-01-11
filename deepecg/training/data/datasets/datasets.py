@@ -80,7 +80,7 @@ class Datasets(object):
             self.labels = self.labels.append(labels, ignore_index=True)
 
         # Save labels
-        self.labels.reset_index(drop=True).to_csv(os.path.join(DATA_DIR, 'datasets', 'labels.csv'))
+        self.labels.reset_index(drop=True).to_csv(os.path.join(DATA_DIR, 'datasets', 'labels.csv'), index=False)
 
     def generate_dbs(self):
         """Generate listed databases."""

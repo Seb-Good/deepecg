@@ -39,6 +39,7 @@ class Graph(object):
         self.f1 = None
         self.optimizer = None
         self.train_summary_all_op = None
+        self.val_cam_plots_summary_op = None
         self.train_summary_metrics_op = None
         self.init_global = None
         self.saver = None
@@ -55,6 +56,7 @@ class Graph(object):
         self.generator_val = None
         self.generator_test = None
         self.iterator = None
+        self.cams = None
         self.tower_losses = None
         self.tower_accuracies = None
         self.tower_f1 = None
@@ -63,6 +65,7 @@ class Graph(object):
         self.tower_labels = None
         self.tower_logits = None
         self.tower_cam = None
+        self.val_cam_plots = None
 
         # Build computational graph
         self.build_graph()
@@ -77,7 +80,8 @@ class Graph(object):
         with tf.device('/cpu:0'):
 
             # Create placeholders
-            self.is_training, self.learning_rate, self.batch_size, self.mode_handle = self._create_placeholders()
+            self.is_training, self.learning_rate, self.batch_size, self.mode_handle, self.val_cam_plots = \
+                self._create_placeholders()
 
             # Get or create global step
             self.global_step = tf.train.get_or_create_global_step()
@@ -115,6 +119,7 @@ class Graph(object):
             """Summaries"""
             # Merge training summaries
             self.train_summary_metrics_op = tf.summary.merge_all('train_metrics')
+            self.val_cam_plots_summary_op = tf.summary.image(name='val', tensor=self.val_cam_plots, max_outputs=256)
 
             """Initialize Variables"""
             # Initialize global variables
@@ -172,9 +177,9 @@ class Graph(object):
                     waveforms, labels = self._get_next_batch()
 
                     # Compute inference
-                    logits, _, cams = self.network.inference(input_layer=waveforms, reuse=tf.AUTO_REUSE,
-                                                             is_training=self.is_training, name='ECGNet',
-                                                             print_shape=True)
+                    logits, cams = self.network.inference(input_layer=waveforms, reuse=tf.AUTO_REUSE,
+                                                          is_training=self.is_training, name='ECGNet',
+                                                          print_shape=True)
 
                     # Compute loss
                     loss = self._compute_loss(logits=logits, labels=labels)
@@ -223,6 +228,7 @@ class Graph(object):
             self.waveforms = tf.concat(self.tower_waveforms, axis=0)
             self.labels = tf.concat(self.tower_labels, axis=0)
             self.logits = tf.concat(self.tower_logits, axis=0)
+            self.cams = tf.concat(self.tower_cams, axis=0)
 
     def _compute_metrics(self):
         """Collect loss metric."""
@@ -421,4 +427,7 @@ class Graph(object):
         with tf.variable_scope('mode_handle') as scope:
             mode_handle = tf.placeholder(dtype=tf.string, shape=[], name=scope.name)
 
-        return is_training, learning_rate, batch_size, mode_handle
+        with tf.variable_scope('val_cam_plots') as scope:
+            val_cam_plots = tf.placeholder(dtype=tf.uint8, shape=[None, None, None, 4], name=scope.name)
+
+        return is_training, learning_rate, batch_size, mode_handle, val_cam_plots

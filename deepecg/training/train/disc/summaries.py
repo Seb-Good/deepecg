@@ -48,6 +48,7 @@ class Summaries(object):
         summary = tf.Summary()
         summary.value.add(tag='loss/loss', simple_value=monitor.current_state.train_loss)
         summary.value.add(tag='accuracy/accuracy', simple_value=monitor.current_state.train_accuracy)
+        summary.value.add(tag='f1/f1', simple_value=monitor.current_state.train_f1)
 
         # Get validation summary
         self.train_summary_writer.add_summary(summary=summary, global_step=monitor.current_state.global_step)
@@ -60,12 +61,30 @@ class Summaries(object):
         summary = tf.Summary()
         summary.value.add(tag='loss/loss', simple_value=monitor.current_state.val_loss)
         summary.value.add(tag='accuracy/accuracy', simple_value=monitor.current_state.val_accuracy)
+        summary.value.add(tag='f1/f1', simple_value=monitor.current_state.val_f1)
 
         # Get validation summary
         self.val_summary_writer.add_summary(summary=summary, global_step=monitor.current_state.global_step)
 
         # Flush summary writer
         self.val_summary_writer.flush()
+
+    def log_val_cam_plots_summaries(self, monitor):
+        """Generate class activation map plot summaries."""
+        if monitor.current_state.val_f1 == monitor.best_state.val_f1:
+
+            # Get validation cam plots as numpy array
+            val_cam_plots = self.sess.run([monitor.current_state.val_cam_plots])[0]
+
+            # Get summary
+            summary = self.sess.run(fetches=[self.graph.val_cam_plots_summary_op],
+                                    feed_dict={self.graph.val_cam_plots: val_cam_plots})
+
+            # Write summary
+            self.val_summary_writer.add_summary(summary=summary[0], global_step=monitor.current_state.global_step)
+
+            # Flush summary writer
+            self.val_summary_writer.flush()
 
     def close_summaries(self):
         """Close summary writers."""

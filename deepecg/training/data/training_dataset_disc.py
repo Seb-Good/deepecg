@@ -111,7 +111,7 @@ class TrainingDB(object):
         path = self.labels.loc[idx, 'path']
 
         try:
-            # Load  and process ECG waveform
+            # Load and process ECG waveform
             ecg = ECG(file_name=self.labels.loc[idx, 'file_name'], label=self.labels.loc[idx, 'label'],
                       waveform=self._load_waveform_file(path=path), filter_bands=[3, 45], fs=self.fs)
 
@@ -124,7 +124,7 @@ class TrainingDB(object):
             return labels
 
         except ValueError:
-            return None
+            return [None]
 
     def _augment(self, file_name, waveform, label, dataset):
         """Augment waveforms with variable padding."""

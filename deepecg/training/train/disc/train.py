@@ -51,6 +51,7 @@ def train(model, epochs, batch_size):
         # Initialize summary writer
         summary_writer = Summaries(sess=sess, graph=model.graph, path=model.save_path)
         summary_writer.log_scalar_summaries(monitor=monitor)
+        summary_writer.log_val_cam_plots_summaries(monitor=monitor)
 
         # Loop through epochs
         for epoch in range(epochs):
@@ -84,6 +85,7 @@ def train(model, epochs, batch_size):
 
             # Log summaries
             summary_writer.log_val_scalar_summaries(monitor=monitor)
+            summary_writer.log_val_cam_plots_summaries(monitor=monitor)
 
             # Log progress
             logger.log_training(monitor=monitor)

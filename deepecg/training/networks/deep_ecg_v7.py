@@ -46,9 +46,9 @@ class DeepECGV7(object):
         with tf.variable_scope(name, reuse=reuse):
 
             # Set variables
-            kernel_size = 5
-            conv_filts = 128
-            res_filts = 128
+            kernel_size = 3
+            conv_filts = 64
+            res_filts = 64
             skip_filts = 128
             skips = list()
 
@@ -225,7 +225,8 @@ class DeepECGV7(object):
             print_output_shape(layer_name=layer_name + '_skip', net=outputs['skip'], print_shape=print_shape)
 
             # Add all skips to res output
-            output = tf.add_n(inputs=skips, name='add_skips')
+            with tf.variable_scope('skips'):
+                output = tf.add_n(inputs=skips, name='add_skips')
 
             # Print shape
             print_output_shape(layer_name='output_skip_addition', net=output, print_shape=print_shape)
@@ -234,10 +235,18 @@ class DeepECGV7(object):
             with tf.variable_scope('relu') as scope:
                 output = tf.nn.relu(output, name=scope.name)
 
+            # Dropout
+            output = dropout_layer(input_layer=output, drop_rate=0.2, seed=self.seed,
+                                   training=is_training, name='dropout1')
+
             # Convolution
             output = conv_layer(input_layer=output, kernel_size=kernel_size, strides=1, dilation_rate=1,
                                 filters=256, padding='SAME', activation=tf.nn.relu, use_bias=False,
                                 name='conv1', seed=self.seed)
+
+            # Dropout
+            output = dropout_layer(input_layer=output, drop_rate=0.2, seed=self.seed,
+                                   training=is_training, name='dropout1')
 
             # Print shape
             print_output_shape(layer_name='output_conv1', net=output, print_shape=print_shape)
@@ -246,6 +255,10 @@ class DeepECGV7(object):
             output = conv_layer(input_layer=output, kernel_size=kernel_size, strides=1, dilation_rate=1,
                                 filters=512, padding='SAME', activation=tf.nn.relu, use_bias=False,
                                 name='conv2', seed=self.seed)
+
+            # Dropout
+            output = dropout_layer(input_layer=output, drop_rate=0.2, seed=self.seed,
+                                   training=is_training, name='dropout1')
 
             # Print shape
             print_output_shape(layer_name='output_conv2', net=output, print_shape=print_shape)
@@ -278,9 +291,9 @@ class DeepECGV7(object):
             print_output_shape(layer_name=layer_name, net=logits, print_shape=print_shape)
 
             # Compute Class Activation Maps
-            # cams = self._get_cams(net=output, is_training=is_training)
+            cams = self._get_cams(net=output, is_training=is_training)
 
-        return logits, [], []
+        return logits, cams
 
     def _residual_block(self, input_layer, kernel_size, layer_name, conv_filts, res_filts,
                         skip_filts, dilation_rate, res=True, skip=True):
@@ -331,14 +344,15 @@ class DeepECGV7(object):
     def _get_cams(self, net, is_training):
         """Collect class activation maps (CAMs)."""
         # Empty list for class activation maps
-        cams = dict()
+        cams = list()
 
         # Compute class activation map
+        # with tf.variable_scope('cam', reuse=tf.AUTO_REUSE):
         if is_training is not None:
             for label in range(self.classes):
-                cams[label] = self._compute_cam(net=net, label=label)
+                cams.append(self._compute_cam(net=net, label=label))
 
-        return cams
+        return tf.concat(cams, axis=2)
 
     def _compute_cam(self, net, label):
         """Compute class activation map (CAM) for specified label."""
