@@ -47,8 +47,8 @@ class DeepECGV7(object):
 
             # Set variables
             kernel_size = 3
-            conv_filts = 64
-            res_filts = 64
+            conv_filts = 128
+            res_filts = 128
             skip_filts = 128
             skips = list()
 
@@ -236,7 +236,7 @@ class DeepECGV7(object):
                 output = tf.nn.relu(output, name=scope.name)
 
             # Dropout
-            output = dropout_layer(input_layer=output, drop_rate=0.2, seed=self.seed,
+            output = dropout_layer(input_layer=output, drop_rate=0.3, seed=self.seed,
                                    training=is_training, name='dropout1')
 
             # Convolution
@@ -245,7 +245,7 @@ class DeepECGV7(object):
                                 name='conv1', seed=self.seed)
 
             # Dropout
-            output = dropout_layer(input_layer=output, drop_rate=0.2, seed=self.seed,
+            output = dropout_layer(input_layer=output, drop_rate=0.3, seed=self.seed,
                                    training=is_training, name='dropout1')
 
             # Print shape
@@ -257,7 +257,7 @@ class DeepECGV7(object):
                                 name='conv2', seed=self.seed)
 
             # Dropout
-            output = dropout_layer(input_layer=output, drop_rate=0.2, seed=self.seed,
+            output = dropout_layer(input_layer=output, drop_rate=0.3, seed=self.seed,
                                    training=is_training, name='dropout1')
 
             # Print shape

@@ -16,6 +16,7 @@ import zipfile
 import numpy as np
 import pandas as pd
 import scipy.io as sio
+from scipy import interpolate
 
 # Local imports
 from deepecg.config.config import DATA_DIR
@@ -37,6 +38,7 @@ class Physionet2017DB(object):
         self.processed_path = os.path.join(DATA_DIR, 'datasets', self.db_name, 'processed')
         self.zip_file_path = os.path.join(self.raw_path, self.db_name + '.zip')
         self.extract_path = os.path.join(self.raw_path, 'training2017')
+        self.fs = 200
 
     def generate_db(self):
         """Generate raw and processed databases."""
@@ -74,6 +76,9 @@ class Physionet2017DB(object):
 
             # Load mat file
             waveform = self._load_mat_file(file_name=labels.loc[idx, 'file_name'] + '.mat')
+
+            # Resample
+            waveform = self._resample_waveform(waveform=waveform, fs=self.fs)
 
             # Save path
             save_path = os.path.join(self.processed_path, 'waveforms', labels.loc[idx, 'file_name'] + '.npy')
@@ -126,3 +131,19 @@ class Physionet2017DB(object):
 
         # Remove zip file
         os.remove(self.zip_file_path)
+
+    def _resample_waveform(self, waveform, fs):
+        """Resample training sample to set sample frequency."""
+        # Get time array
+        time = np.arange(len(waveform)) * 1 / self.fs
+
+        # Generate new resampling time array
+        times_rs = np.arange(0, time[-1], 1 / fs)
+
+        # Setup interpolation function
+        interp_func = interpolate.interp1d(x=time, y=waveform, kind='linear')
+
+        # Interpolate contiguous segment
+        sample_rs = interp_func(times_rs)
+
+        return sample_rs
