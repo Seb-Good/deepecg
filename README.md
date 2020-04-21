@@ -60,3 +60,13 @@ CVPR, 2016. [DOI](https://arxiv.org/pdf/1512.04150.pdf)
 2.	Goodfellow, S. D., A. Goodwin, R. Greer, P. C. Laussen, M. Mazwi, and D. Eytan (2018), Atrial fibrillation 
 classification using step-by-step machine learning, Biomed. Phys. Eng. Express, 4, 045005. 
 [DOI: 10.1088/2057-1976/aabef4](http://iopscience.iop.org/article/10.1088/2057-1976/aabef4) 
+
+## Citation
+```
+@conference{goodfellow_mlforhc_2018,
+  author = {S. D. Goodfellow and A. Goodwin and R. Greer and P. C. Laussen and M. Mazwi and D. Eytan},
+  title = {{Towards understanding ECG rhythm classification using convolutional neural networks and attention mappings}},
+  booktitle = {Proceedings of Machine Learning for Healthcare 2018 JMLR WC Track Volume 85, Aug 17–18, 2018, Stanford, California, USA},
+  year = 2018
+}
+```
