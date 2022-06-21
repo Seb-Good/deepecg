@@ -1,7 +1,7 @@
 matplotlib==2.2.2
 ipywidgets==7.2.1
 scipy==1.1.0
-numpy==1.14.5
+numpy==1.22.0
 pandas==0.23.1
 scikit-learn==0.19.1
 tensorflow==1.8.0
